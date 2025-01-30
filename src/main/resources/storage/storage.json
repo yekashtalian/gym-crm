@@ -1,0 +1,124 @@
+{
+  "Training": [
+    {
+      "id": "a36d3c92-981e-430f-a6f5-36ca1828aacd",
+      "traineeId": "550e8400-e29b-41d4-a716-446655440000",
+      "trainerId": "550e8400-e29b-41d4-a716-446655440002",
+      "trainingName": "Morning Yoga",
+      "type": "GROUP",
+      "date": [
+        2025,
+        1,
+        25
+      ],
+      "duration": 60
+    },
+    {
+      "id": "cc91954c-33f6-49a6-b9fa-dd182c9efb8c",
+      "traineeId": "550e8400-e29b-41d4-a716-446655440001",
+      "trainerId": "550e8400-e29b-41d4-a716-446655440003",
+      "trainingName": "Weightlifting Basics",
+      "type": "INDIVIDUAL",
+      "date": [
+        2025,
+        1,
+        26
+      ],
+      "duration": 90
+    }
+  ],
+  "Trainee": [
+    {
+      "userId": "550e8400-e29b-41d4-a716-446655440000",
+      "firstName": "John",
+      "lastName": "Doe",
+      "username": "john.doe",
+      "password": "secure123",
+      "isActive": true,
+      "dateOfBirth": [
+        1995,
+        5,
+        15
+      ],
+      "address": "123 Main St, Springfield"
+    },
+    {
+      "userId": "550e8400-e29b-41d4-a716-446655440001",
+      "firstName": "Emily",
+      "lastName": "Clark",
+      "username": "emily.clark",
+      "password": "pass456",
+      "isActive": true,
+      "dateOfBirth": [
+        1998,
+        7,
+        20
+      ],
+      "address": "456 Elm St, Riverdale"
+    },
+    {
+      "userId": "70f8ded5-c5e9-4cf8-9c5f-8e2fcd1ae083",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "username": "janesmith",
+      "password": "mypassword",
+      "isActive": true,
+      "dateOfBirth": [
+        1995,
+        5,
+        15
+      ],
+      "address": "123 Elm Street"
+    },
+    {
+      "userId": "1",
+      "firstName": "John",
+      "lastName": "Smith",
+      "username": "john.smith",
+      "password": "(98R*SWzVg",
+      "isActive": null,
+      "dateOfBirth": null,
+      "address": null
+    },
+    {
+      "userId": "4",
+      "firstName": "John",
+      "lastName": "Smith",
+      "username": "john.smith3",
+      "password": "e@fV$%-cgb",
+      "isActive": null,
+      "dateOfBirth": null,
+      "address": null
+    },
+    {
+      "userId": "6",
+      "firstName": "John",
+      "lastName": "Smith",
+      "username": "john.smith4",
+      "password": "Ta>mJQl8CL",
+      "isActive": null,
+      "dateOfBirth": null,
+      "address": null
+    }
+  ],
+  "Trainer": [
+    {
+      "userId": "550e8400-e29b-41d4-a716-446655440002",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "username": "jane.smith",
+      "password": "trainer789",
+      "isActive": true,
+      "specialization": "YOGA"
+    },
+    {
+      "userId": "550e8400-e29b-41d4-a716-446655440003",
+      "firstName": "Michael",
+      "lastName": "Brown",
+      "username": "michael.brown",
+      "password": "coach123",
+      "isActive": true,
+      "specialization": "STRENGTH_TRAINING"
+    }
+  ]
+}
