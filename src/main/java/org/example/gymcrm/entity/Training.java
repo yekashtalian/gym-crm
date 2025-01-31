@@ -1,10 +1,9 @@
 package org.example.gymcrm.entity;
 
-import org.example.gymcrm.entity.enums.TrainingType;
-
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
+import org.example.gymcrm.entity.enums.TrainingType;
 
 public class Training {
   private String id;

@@ -1,19 +1,16 @@
 package org.example.gymcrm.service.impl;
 
+import java.util.List;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingDao;
-import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.exception.TrainingServiceException;
 import org.example.gymcrm.service.TrainingService;
-import org.example.gymcrm.util.ProfileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class TrainingServiceImpl implements TrainingService {

@@ -1,8 +1,7 @@
 package org.example.gymcrm.entity;
 
-import org.example.gymcrm.entity.enums.TrainingType;
-
 import java.util.UUID;
+import org.example.gymcrm.entity.enums.TrainingType;
 
 public class Trainer extends User {
   private TrainingType specialization;

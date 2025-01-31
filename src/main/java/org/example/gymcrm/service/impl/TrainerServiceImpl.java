@@ -1,19 +1,17 @@
 package org.example.gymcrm.service.impl;
 
+import java.util.List;
+import java.util.stream.Stream;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.exception.TrainerServiceException;
 import org.example.gymcrm.service.TrainerService;
-import org.example.gymcrm.ui.Menu;
 import org.example.gymcrm.util.ProfileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 public class TrainerServiceImpl implements TrainerService {
@@ -66,7 +64,7 @@ public class TrainerServiceImpl implements TrainerService {
   @Override
   public List<String> getUsernames() {
     if (trainerDao.getUsernames().isEmpty()) {
-      throw new TrainerServiceException("");
+      throw new TrainerServiceException("There are no usernames for trainers");
     }
     return trainerDao.getUsernames();
   }

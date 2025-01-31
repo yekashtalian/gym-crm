@@ -3,21 +3,19 @@ package org.example.gymcrm.dao;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.exception.StorageException;
-import org.example.gymcrm.service.impl.TrainerServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
 
 @Component
 public class Storage {

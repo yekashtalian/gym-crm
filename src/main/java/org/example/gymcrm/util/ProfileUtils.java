@@ -1,9 +1,8 @@
 package org.example.gymcrm.util;
 
-import org.example.gymcrm.exception.ProfileUtilsException;
-
 import java.util.List;
 import java.util.Random;
+import org.example.gymcrm.exception.ProfileUtilsException;
 
 public class ProfileUtils {
   private static final int PASSWORD_LENGTH = 10;

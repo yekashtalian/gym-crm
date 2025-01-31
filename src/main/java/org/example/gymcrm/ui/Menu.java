@@ -1,5 +1,7 @@
 package org.example.gymcrm.ui;
 
+import java.time.LocalDate;
+import java.util.Scanner;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
@@ -14,9 +16,6 @@ import org.example.gymcrm.service.TrainingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDate;
-import java.util.Scanner;
 
 @Component
 public class Menu {
