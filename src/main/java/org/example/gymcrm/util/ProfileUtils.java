@@ -2,6 +2,11 @@ package org.example.gymcrm.util;
 
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.example.gymcrm.entity.Trainee;
+import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.exception.ProfileUtilsException;
 
 public class ProfileUtils {
@@ -12,26 +17,29 @@ public class ProfileUtils {
 
   public static String generateUsername(
       String firstName, String lastName, List<String> existingUsernames) {
+
     String baseUsername = (firstName + "." + lastName).toLowerCase();
     int counter = 0;
+    boolean baseExists = false;
 
     for (String username : existingUsernames) {
-      if (username.startsWith(baseUsername)) {
+      if (username.equals(baseUsername)) {
+        baseExists = true;
+      } else if (username.startsWith(baseUsername)) {
         try {
-          counter = parseSerialNumber(baseUsername, counter, username);
+          counter = Math.max(counter, Integer.parseInt(username.substring(baseUsername.length())));
         } catch (NumberFormatException ignored) {
           throw new ProfileUtilsException("Error while trying to parse serial number");
         }
       }
     }
 
-    return baseUsername + (counter + 1);
+    return baseExists || counter > 0 ? baseUsername + (counter + 1) : baseUsername;
   }
 
-  private static int parseSerialNumber(String baseUsername, int counter, String username) {
-    int num = Integer.parseInt(username.substring(baseUsername.length()));
-    counter = Math.max(counter, num);
-    return counter;
+  public static List<String> mergeAllUsernames(
+      List<String> traineeUsernames, List<String> trainerUsernames) {
+    return Stream.concat(traineeUsernames.stream(), trainerUsernames.stream()).toList();
   }
 
   public static String generateRandomPassword() {

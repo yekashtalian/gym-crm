@@ -79,7 +79,11 @@ public class Menu {
           default ->
               System.err.println("Invalid option, please write correct option from the menu.");
         }
-      } catch (TraineeServiceException | TrainerServiceException | TrainingServiceException | ProfileUtilsException ex) {
+      } catch (TraineeServiceException
+          | TrainerServiceException
+          | TrainingServiceException
+          | ProfileUtilsException
+          | NumberFormatException ex) {
         logger.error(ex.getMessage());
       }
       System.out.println(SEPARATOR);
@@ -104,13 +108,13 @@ public class Menu {
 
   private void updateTrainer() {
     var updatedTrainer =
-            new Trainer(
-                    "UpdatedName",
-                    "updatedSurname",
-                    "updatedUsername",
-                    "updateTrainingName",
-                    true,
-                    TrainingType.STRENGTH_TRAINING);
+        new Trainer(
+            "UpdatedName",
+            "updatedSurname",
+            "updatedUsername",
+            "updateTrainingName",
+            true,
+            TrainingType.STRENGTH_TRAINING);
 
     trainerService.update("550e8400-e29b-41d4-a716-446655440000", updatedTrainer);
   }

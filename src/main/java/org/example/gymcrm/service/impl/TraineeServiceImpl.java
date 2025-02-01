@@ -28,7 +28,7 @@ public class TraineeServiceImpl implements TraineeService {
     setGeneratedUsername(trainee);
 
     traineeDao.save(trainee);
-    logger.info("Successfully added trainee: " + trainee);
+    logger.info("Successfully added trainee: {}", trainee);
   }
 
   private void setGeneratedPassword(Trainee trainee) {
@@ -38,12 +38,9 @@ public class TraineeServiceImpl implements TraineeService {
   private void setGeneratedUsername(Trainee trainee) {
     trainee.setUsername(
         ProfileUtils.generateUsername(
-            trainee.getFirstName(), trainee.getLastName(), mergeAllUsernames()));
-  }
-
-  private List<String> mergeAllUsernames() {
-    return Stream.concat(traineeDao.getUsernames().stream(), trainerDao.getUsernames().stream())
-        .toList();
+            trainee.getFirstName(),
+            trainee.getLastName(),
+            ProfileUtils.mergeAllUsernames(traineeDao.getUsernames(), trainerDao.getUsernames())));
   }
 
   @Override
@@ -51,7 +48,7 @@ public class TraineeServiceImpl implements TraineeService {
     traineeDao.findById(id).orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
     validateFirstAndLastName(trainee);
     traineeDao.update(id, trainee);
-    logger.info("Successfully updated trainee with id: " + id);
+    logger.info("Successfully updated trainee with id: {}", id);
   }
 
   @Override
@@ -59,7 +56,7 @@ public class TraineeServiceImpl implements TraineeService {
     var traineeToDelete =
         traineeDao.findById(id).orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
     traineeDao.remove(traineeToDelete);
-    logger.info("Successfully deleted trainee with id: " + id);
+    logger.info("Successfully deleted trainee with id: {}", id);
   }
 
   @Override

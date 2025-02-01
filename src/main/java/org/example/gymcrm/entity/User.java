@@ -98,20 +98,11 @@ public abstract class User {
 
     User user = (User) o;
 
-    if (!Objects.equals(userId, user.userId)) return false;
-    if (!Objects.equals(firstName, user.firstName)) return false;
-    if (!Objects.equals(lastName, user.lastName)) return false;
-    if (!Objects.equals(username, user.username)) return false;
-    return Objects.equals(password, user.password);
+    return Objects.equals(userId, user.userId);
   }
 
   @Override
   public int hashCode() {
-    int result = userId != null ? userId.hashCode() : 0;
-    result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
-    result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
-    result = 31 * result + (username != null ? username.hashCode() : 0);
-    result = 31 * result + (password != null ? password.hashCode() : 0);
-    return result;
+    return userId != null ? userId.hashCode() : 0;
   }
 }

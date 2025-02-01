@@ -69,36 +69,6 @@
         15
       ],
       "address": "123 Elm Street"
-    },
-    {
-      "userId": "1",
-      "firstName": "John",
-      "lastName": "Smith",
-      "username": "john.smith",
-      "password": "(98R*SWzVg",
-      "isActive": null,
-      "dateOfBirth": null,
-      "address": null
-    },
-    {
-      "userId": "4",
-      "firstName": "John",
-      "lastName": "Smith",
-      "username": "john.smith3",
-      "password": "e@fV$%-cgb",
-      "isActive": null,
-      "dateOfBirth": null,
-      "address": null
-    },
-    {
-      "userId": "6",
-      "firstName": "John",
-      "lastName": "Smith",
-      "username": "john.smith4",
-      "password": "Ta>mJQl8CL",
-      "isActive": null,
-      "dateOfBirth": null,
-      "address": null
     }
   ],
   "Trainer": [

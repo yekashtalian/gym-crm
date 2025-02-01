@@ -28,7 +28,7 @@ public class TrainerServiceImpl implements TrainerService {
     setGeneratedPassword(trainer);
 
     trainerDao.save(trainer);
-    logger.info("Successfully saved " + trainer);
+    logger.info("Successfully saved: {}", trainer);
   }
 
   private void setGeneratedPassword(Trainer trainer) {
@@ -38,12 +38,9 @@ public class TrainerServiceImpl implements TrainerService {
   private void setGeneratedUsername(Trainer trainer) {
     trainer.setUsername(
         ProfileUtils.generateUsername(
-            trainer.getFirstName(), trainer.getLastName(), mergeAllUsernames()));
-  }
-
-  private List<String> mergeAllUsernames() {
-    return Stream.concat(trainerDao.getUsernames().stream(), traineeDao.getUsernames().stream())
-        .toList();
+            trainer.getFirstName(),
+            trainer.getLastName(),
+            ProfileUtils.mergeAllUsernames(traineeDao.getUsernames(), trainerDao.getUsernames())));
   }
 
   @Override
@@ -51,12 +48,12 @@ public class TrainerServiceImpl implements TrainerService {
     trainerDao.findById(id).orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
     validateFirstAndLastName(trainer);
     trainerDao.update(id, trainer);
-    logger.info("Successfully updated trainer with ID: " + id);
+    logger.info("Successfully updated trainer with ID: {}", id);
   }
 
   @Override
   public List<Trainer> getAll() {
-    var trainers =  trainerDao.findAll();
+    var trainers = trainerDao.findAll();
     logger.info("Successfully retrieved trainers");
     return trainers;
   }

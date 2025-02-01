@@ -28,7 +28,7 @@ public class TrainingServiceImpl implements TrainingService {
         .findById(training.getTrainerId())
         .orElseThrow(() -> new TrainingServiceException("This trainer ID doesn't exist!"));
     trainingDao.save(training);
-    logger.info("Successfully added training: " + training);
+    logger.info("Successfully added training: {}", training);
   }
 
   @Override
