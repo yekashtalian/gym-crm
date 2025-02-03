@@ -29,13 +29,16 @@ public class TrainingDaoImpl implements TrainingDao {
 
   @Override
   public List<Training> findAll() {
-    return storage.getTrainingStorage().get(TRAINING_KEY);
+    var trainings = storage.getTrainingStorage().get(TRAINING_KEY);
+    return trainings;
   }
 
   @Override
   public Optional<Training> findById(String id) {
-    return storage.getTrainingStorage().get(TRAINING_KEY).stream()
-        .filter(tr -> tr.getId().equals(id))
-        .findFirst();
+    Optional<Training> optionalTraining =
+        storage.getTrainingStorage().get(TRAINING_KEY).stream()
+            .filter(tr -> tr.getId().equals(id))
+            .findFirst();
+    return optionalTraining;
   }
 }

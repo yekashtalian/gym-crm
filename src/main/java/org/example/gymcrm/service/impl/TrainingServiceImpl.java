@@ -27,6 +27,7 @@ public class TrainingServiceImpl implements TrainingService {
     trainerDao
         .findById(training.getTrainerId())
         .orElseThrow(() -> new TrainingServiceException("This trainer ID doesn't exist!"));
+
     trainingDao.save(training);
     logger.info("Successfully added training: {}", training);
   }

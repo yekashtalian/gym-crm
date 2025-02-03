@@ -1,9 +1,17 @@
 package org.example.gymcrm.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+import java.util.List;
+import java.util.Optional;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.enums.TrainingType;
+import org.example.gymcrm.exception.ProfileUtilsException;
 import org.example.gymcrm.exception.TrainerServiceException;
 import org.example.gymcrm.service.impl.TrainerServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -13,14 +21,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TrainerServiceTest {
@@ -82,9 +82,9 @@ public class TrainerServiceTest {
     var trainer =
         new Trainer(firstName, lastName, "testUsername", "password", true, TrainingType.BOXING);
 
-    var exception = assertThrows(TrainerServiceException.class, () -> trainerService.save(trainer));
+    var exception = assertThrows(ProfileUtilsException.class, () -> trainerService.save(trainer));
 
-    assertThat(exception.getClass()).isEqualTo(TrainerServiceException.class);
+    assertThat(exception.getClass()).isEqualTo(ProfileUtilsException.class);
     assertThat(exception.getMessage()).isEqualTo("First or Last name cannot be empty or null");
 
     verifyNoInteractions(trainerDao);
@@ -142,7 +142,8 @@ public class TrainerServiceTest {
   void getUsernamesIfUsernamesAreEmpty() {
     when(trainerDao.getUsernames()).thenReturn(List.of());
 
-    var exception = assertThrows(TrainerServiceException.class, () -> trainerService.getUsernames());
+    var exception =
+        assertThrows(TrainerServiceException.class, () -> trainerService.getUsernames());
 
     assertThat(exception.getClass()).isEqualTo(TrainerServiceException.class);
   }

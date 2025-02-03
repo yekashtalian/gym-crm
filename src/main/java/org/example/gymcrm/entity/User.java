@@ -1,4 +1,5 @@
 package org.example.gymcrm.entity;
+
 import java.util.Objects;
 import java.util.UUID;
 
@@ -34,7 +35,13 @@ public abstract class User {
     this.lastName = lastName;
   }
 
-  public User(String userId, String firstName, String lastName, String username, String password, Boolean isActive) {
+  public User(
+      String userId,
+      String firstName,
+      String lastName,
+      String username,
+      String password,
+      Boolean isActive) {
     this.userId = userId;
     this.firstName = firstName;
     this.lastName = lastName;

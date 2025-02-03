@@ -6,10 +6,7 @@ import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.enums.TrainingType;
-import org.example.gymcrm.exception.ProfileUtilsException;
-import org.example.gymcrm.exception.TraineeServiceException;
-import org.example.gymcrm.exception.TrainerServiceException;
-import org.example.gymcrm.exception.TrainingServiceException;
+import org.example.gymcrm.exception.*;
 import org.example.gymcrm.service.TraineeService;
 import org.example.gymcrm.service.TrainerService;
 import org.example.gymcrm.service.TrainingService;
@@ -20,8 +17,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class Menu {
   private static final Logger logger = LoggerFactory.getLogger(Menu.class);
-  private static final String SET_GREEN_TEXT_COLOR = "\u001B[32m";
-  private static final String SET_DEFAULT_TEXT_COLOR = "\u001B[0m";
   private static final String SEPARATOR =
       "-------------------------------------------------------------------";
   private final Scanner scanner = new Scanner(System.in);
@@ -76,21 +71,21 @@ public class Menu {
             running = false;
             exitFromMenu();
           }
-          default ->
-              System.err.println("Invalid option, please write correct option from the menu.");
+          default -> logger.warn("Invalid option, please write correct option from the menu.");
         }
       } catch (TraineeServiceException
           | TrainerServiceException
           | TrainingServiceException
-          | ProfileUtilsException
-          | NumberFormatException ex) {
+          | ProfileUtilsException ex) {
+        logger.warn(ex.getMessage());
+      } catch (StorageException ex) {
         logger.error(ex.getMessage());
       }
       System.out.println(SEPARATOR);
     }
   }
 
-  private void createTraining() {
+  void createTraining() {
     var training =
         new Training(
             "550e8400-e29b-41d4-a716-446655440000",
@@ -102,11 +97,11 @@ public class Menu {
     trainingService.save(training);
   }
 
-  private void showAllTrainings() {
+  void showAllTrainings() {
     trainingService.getAll().forEach(System.out::println);
   }
 
-  private void updateTrainer() {
+  void updateTrainer() {
     var updatedTrainer =
         new Trainer(
             "UpdatedName",
@@ -116,23 +111,23 @@ public class Menu {
             true,
             TrainingType.STRENGTH_TRAINING);
 
-    trainerService.update("550e8400-e29b-41d4-a716-446655440000", updatedTrainer);
+    trainerService.update("550e8400-e29b-41d4-a716-446655440009", updatedTrainer);
   }
 
-  private void createTrainer() {
+  void createTrainer() {
     var trainer = new Trainer("John", "Smith");
     trainerService.save(trainer);
   }
 
-  private void showAllTrainers() {
+  void showAllTrainers() {
     trainerService.getAll().forEach(System.out::println);
   }
 
-  private void deleteTrainee() {
+  void deleteTrainee() {
     traineeService.delete("abcd-1234");
   }
 
-  private void updateTrainee() {
+  void updateTrainee() {
     var updatedTrainee =
         new Trainee(
             "UpdatedName",
@@ -143,10 +138,10 @@ public class Menu {
             LocalDate.of(1995, 5, 15),
             "updatedAddress");
 
-    traineeService.update("550e8400-e29b-41d4-a716-446655440000", updatedTrainee);
+    traineeService.update("550e8400-e29b-41d4-a716-446655440001", updatedTrainee);
   }
 
-  private void createTrainee() {
+  void createTrainee() {
     var trainee =
         new Trainee(
             "abcd-1234",
@@ -161,11 +156,11 @@ public class Menu {
     traineeService.save(trainee);
   }
 
-  private void showAllTrainees() {
+  void showAllTrainees() {
     traineeService.getAll().forEach(System.out::println);
   }
 
-  private void checkUsernameScenario() {
+  void checkUsernameScenario() {
     var trainee = new Trainee("1", "John", "Smith");
     var trainee1 = new Trainee("2", "John", "Smith");
     var trainee2 = new Trainee("3", "John", "Smith");

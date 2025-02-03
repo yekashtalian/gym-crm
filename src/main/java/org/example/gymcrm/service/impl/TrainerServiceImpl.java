@@ -1,7 +1,8 @@
 package org.example.gymcrm.service.impl;
 
+import static org.example.gymcrm.util.ProfileUtils.validateFirstAndLastName;
+
 import java.util.List;
-import java.util.stream.Stream;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.entity.Trainer;
@@ -22,7 +23,7 @@ public class TrainerServiceImpl implements TrainerService {
 
   @Override
   public void save(Trainer trainer) {
-    validateFirstAndLastName(trainer);
+    validateFirstAndLastName(trainer.getFirstName(), trainer.getLastName());
 
     setGeneratedUsername(trainer);
     setGeneratedPassword(trainer);
@@ -31,22 +32,10 @@ public class TrainerServiceImpl implements TrainerService {
     logger.info("Successfully saved: {}", trainer);
   }
 
-  private void setGeneratedPassword(Trainer trainer) {
-    trainer.setPassword(ProfileUtils.generateRandomPassword());
-  }
-
-  private void setGeneratedUsername(Trainer trainer) {
-    trainer.setUsername(
-        ProfileUtils.generateUsername(
-            trainer.getFirstName(),
-            trainer.getLastName(),
-            ProfileUtils.mergeAllUsernames(traineeDao.getUsernames(), trainerDao.getUsernames())));
-  }
-
   @Override
   public void update(String id, Trainer trainer) {
     trainerDao.findById(id).orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
-    validateFirstAndLastName(trainer);
+    validateFirstAndLastName(trainer.getFirstName(), trainer.getLastName());
     trainerDao.update(id, trainer);
     logger.info("Successfully updated trainer with ID: {}", id);
   }
@@ -66,10 +55,15 @@ public class TrainerServiceImpl implements TrainerService {
     return trainerDao.getUsernames();
   }
 
-  private static void validateFirstAndLastName(Trainer trainer) {
-    if ((trainer.getFirstName() == null || trainer.getFirstName().isEmpty())
-        || (trainer.getLastName() == null || trainer.getLastName().isEmpty())) {
-      throw new TrainerServiceException("First or Last name cannot be empty or null");
-    }
+  private void setGeneratedPassword(Trainer trainer) {
+    trainer.setPassword(ProfileUtils.generateRandomPassword());
+  }
+
+  private void setGeneratedUsername(Trainer trainer) {
+    trainer.setUsername(
+        ProfileUtils.generateUsername(
+            trainer.getFirstName(),
+            trainer.getLastName(),
+            ProfileUtils.mergeAllUsernames(traineeDao.getUsernames(), trainerDao.getUsernames())));
   }
 }

@@ -1,10 +1,8 @@
 package org.example.gymcrm.dao;
 
-import org.example.gymcrm.entity.Trainee;
-
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import org.example.gymcrm.entity.Trainee;
 
 public interface TraineeDao {
   void save(Trainee trainee);
@@ -16,5 +14,6 @@ public interface TraineeDao {
   List<Trainee> findAll();
 
   Optional<Trainee> findById(String id);
+
   List<String> getUsernames();
 }

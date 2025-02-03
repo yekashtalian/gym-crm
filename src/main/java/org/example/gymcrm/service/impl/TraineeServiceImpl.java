@@ -1,13 +1,13 @@
 package org.example.gymcrm.service.impl;
 
+import static org.example.gymcrm.util.ProfileUtils.*;
+
 import java.util.List;
-import java.util.stream.Stream;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.exception.TraineeServiceException;
 import org.example.gymcrm.service.TraineeService;
-import org.example.gymcrm.util.ProfileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class TraineeServiceImpl implements TraineeService {
 
   @Override
   public void save(Trainee trainee) {
-    validateFirstAndLastName(trainee);
+    validateFirstAndLastName(trainee.getFirstName(), trainee.getLastName());
 
     setGeneratedPassword(trainee);
     setGeneratedUsername(trainee);
@@ -31,22 +31,10 @@ public class TraineeServiceImpl implements TraineeService {
     logger.info("Successfully added trainee: {}", trainee);
   }
 
-  private void setGeneratedPassword(Trainee trainee) {
-    trainee.setPassword(ProfileUtils.generateRandomPassword());
-  }
-
-  private void setGeneratedUsername(Trainee trainee) {
-    trainee.setUsername(
-        ProfileUtils.generateUsername(
-            trainee.getFirstName(),
-            trainee.getLastName(),
-            ProfileUtils.mergeAllUsernames(traineeDao.getUsernames(), trainerDao.getUsernames())));
-  }
-
   @Override
   public void update(String id, Trainee trainee) {
     traineeDao.findById(id).orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
-    validateFirstAndLastName(trainee);
+    validateFirstAndLastName(trainee.getFirstName(), trainee.getLastName());
     traineeDao.update(id, trainee);
     logger.info("Successfully updated trainee with id: {}", id);
   }
@@ -74,10 +62,15 @@ public class TraineeServiceImpl implements TraineeService {
     return traineeDao.getUsernames();
   }
 
-  private static void validateFirstAndLastName(Trainee trainee) {
-    if ((trainee.getFirstName() == null || trainee.getFirstName().isEmpty())
-        || (trainee.getLastName() == null || trainee.getLastName().isEmpty())) {
-      throw new TraineeServiceException("First or Last name cannot be empty or null");
-    }
+  private void setGeneratedUsername(Trainee trainee) {
+    trainee.setUsername(
+        generateUsername(
+            trainee.getFirstName(),
+            trainee.getLastName(),
+            mergeAllUsernames(traineeDao.getUsernames(), trainerDao.getUsernames())));
+  }
+
+  private void setGeneratedPassword(Trainee trainee) {
+    trainee.setPassword(generateRandomPassword());
   }
 }

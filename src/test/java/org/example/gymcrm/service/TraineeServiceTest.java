@@ -1,11 +1,18 @@
 package org.example.gymcrm.service;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.entity.Trainee;
-import org.example.gymcrm.entity.Trainer;
+import org.example.gymcrm.exception.ProfileUtilsException;
 import org.example.gymcrm.exception.TraineeServiceException;
-import org.example.gymcrm.exception.TrainerServiceException;
 import org.example.gymcrm.service.impl.TraineeServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,16 +21,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class})
 public class TraineeServiceTest {
@@ -91,9 +88,9 @@ public class TraineeServiceTest {
             LocalDate.of(2000, 2, 20),
             "Test Address");
 
-    var exception = assertThrows(TraineeServiceException.class, () -> traineeService.save(trainee));
+    var exception = assertThrows(ProfileUtilsException.class, () -> traineeService.save(trainee));
 
-    assertThat(exception.getClass()).isEqualTo(TraineeServiceException.class);
+    assertThat(exception.getClass()).isEqualTo(ProfileUtilsException.class);
     assertThat(exception.getMessage()).isEqualTo("First or Last name cannot be empty or null");
 
     verifyNoInteractions(traineeDao);

@@ -33,7 +33,7 @@ class TrainingDaoTest {
     var training = new Training();
 
     trainingDao.save(training);
-    
+
     assertThat(trainingStorage).containsKey(TRAINING_KEY);
     assertThat(trainingStorage.get(TRAINING_KEY).size()).isEqualTo(1);
     assertThat(trainingStorage.get(TRAINING_KEY).get(0)).isEqualTo(training);

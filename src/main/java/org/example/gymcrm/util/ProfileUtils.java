@@ -2,11 +2,7 @@ package org.example.gymcrm.util;
 
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.example.gymcrm.entity.Trainee;
-import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.exception.ProfileUtilsException;
 
 public class ProfileUtils {
@@ -18,23 +14,40 @@ public class ProfileUtils {
   public static String generateUsername(
       String firstName, String lastName, List<String> existingUsernames) {
 
-    String baseUsername = (firstName + "." + lastName).toLowerCase();
-    int counter = 0;
-    boolean baseExists = false;
+    String baseUsername = createBaseUsername(firstName, lastName);
+    int maxCounter = getMaxCounter(baseUsername, existingUsernames);
+    boolean baseExists = existingUsernames.contains(baseUsername);
+
+    if (baseExists || maxCounter > 0) {
+      return baseUsername + (maxCounter + 1);
+    }
+    return baseUsername;
+  }
+
+  private static String createBaseUsername(String firstName, String lastName) {
+    return (firstName + "." + lastName).toLowerCase();
+  }
+
+  private static int getMaxCounter(String baseUsername, List<String> existingUsernames) {
+    int maxCounter = 0;
 
     for (String username : existingUsernames) {
-      if (username.equals(baseUsername)) {
-        baseExists = true;
-      } else if (username.startsWith(baseUsername)) {
-        try {
-          counter = Math.max(counter, Integer.parseInt(username.substring(baseUsername.length())));
-        } catch (NumberFormatException ignored) {
-          throw new ProfileUtilsException("Error while trying to parse serial number");
-        }
+      if (username.startsWith(baseUsername)) {
+        maxCounter = Math.max(maxCounter, extractCounter(baseUsername, username));
       }
     }
 
-    return baseExists || counter > 0 ? baseUsername + (counter + 1) : baseUsername;
+    return maxCounter;
+  }
+
+  private static int extractCounter(String baseUsername, String username) {
+    try {
+      return username.equals(baseUsername)
+          ? 0
+          : Integer.parseInt(username.substring(baseUsername.length()));
+    } catch (NumberFormatException ignored) {
+      throw new ProfileUtilsException("Error while trying to parse serial number");
+    }
   }
 
   public static List<String> mergeAllUsernames(
@@ -51,5 +64,15 @@ public class ProfileUtils {
     }
 
     return password.toString();
+  }
+
+  public static void validateFirstAndLastName(String firstName, String lastName) {
+    if (isNullOrEmpty(firstName) || isNullOrEmpty(lastName)) {
+      throw new ProfileUtilsException("First or Last name cannot be empty or null");
+    }
+  }
+
+  private static boolean isNullOrEmpty(String str) {
+    return str == null || str.isEmpty();
   }
 }

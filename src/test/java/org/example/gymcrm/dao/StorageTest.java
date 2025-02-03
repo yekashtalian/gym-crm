@@ -1,6 +1,14 @@
 package org.example.gymcrm.dao;
 
-import org.example.gymcrm.dao.Storage;
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.List;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
@@ -9,19 +17,13 @@ import org.example.gymcrm.exception.StorageException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 class StorageTest {
+  @Mock ObjectMapper objectMapper;
 
-  private Storage storage;
+  @InjectMocks private Storage storage;
 
   @TempDir Path tempDir;
 
@@ -29,7 +31,10 @@ class StorageTest {
 
   @BeforeEach
   void setUp() {
+    objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
     storage = new Storage();
+    storage.setObjectMapper(objectMapper);
     testFilePath = tempDir.resolve("test_storage.json").toString();
     storage.setFilePath(testFilePath);
   }
@@ -42,7 +47,7 @@ class StorageTest {
     } catch (IOException e) {
       fail();
     }
-    assertThrows(StorageException.class, storage::initStorage);
+    assertThrows(StorageException.class, storage::init);
   }
 
   @Test
@@ -85,7 +90,7 @@ class StorageTest {
                     LocalDate.of(2025, 1, 25),
                     60)));
 
-    assertDoesNotThrow(storage::saveStorageState);
+    assertDoesNotThrow(storage::save);
 
     File savedFile = new File(testFilePath);
     assertTrue(savedFile.exists());

@@ -89,6 +89,15 @@
       "password": "coach123",
       "isActive": true,
       "specialization": "STRENGTH_TRAINING"
+    },
+    {
+      "userId": "550e8400-e29b-41d4-a716-446655440009",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "username": "jane.smith",
+      "password": "trainer789",
+      "isActive": true,
+      "specialization": "YOGA"
     }
   ]
 }

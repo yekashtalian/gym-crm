@@ -27,35 +27,40 @@ public class TrainerDaoImpl implements TrainerDao {
   @Override
   public void update(String id, Trainer trainer) {
     var trainers = storage.getTrainerStorage().get(TRAINER_KEY);
-
     trainers.stream()
         .filter(tr -> tr.getUserId().equals(id))
         .findFirst()
-        .ifPresent(
-            tr -> {
-              tr.setFirstName(trainer.getFirstName());
-              tr.setLastName(trainer.getLastName());
-              tr.setUsername(trainer.getUsername());
-              tr.setPassword(trainer.getPassword());
-              tr.setIsActive(trainer.getIsActive());
-              tr.setSpecialization(trainer.getSpecialization());
-            });
+        .ifPresent(tr -> updateTrainerFields(tr, trainer));
+  }
+
+  private static void updateTrainerFields(Trainer existing, Trainer updated) {
+    existing.setFirstName(updated.getFirstName());
+    existing.setLastName(updated.getLastName());
+    existing.setUsername(updated.getUsername());
+    existing.setPassword(updated.getPassword());
+    existing.setIsActive(updated.getIsActive());
+    existing.setSpecialization(updated.getSpecialization());
   }
 
   @Override
   public List<Trainer> findAll() {
-    return storage.getTrainerStorage().get(TRAINER_KEY);
+    var trainers = storage.getTrainerStorage().get(TRAINER_KEY);
+    return trainers;
   }
 
   @Override
   public Optional<Trainer> findById(String id) {
-    return storage.getTrainerStorage().get(TRAINER_KEY).stream()
-        .filter(tr -> tr.getUserId().equals(id))
-        .findFirst();
+    Optional<Trainer> optionalTrainer =
+        storage.getTrainerStorage().get(TRAINER_KEY).stream()
+            .filter(tr -> tr.getUserId().equals(id))
+            .findFirst();
+    return optionalTrainer;
   }
 
   @Override
   public List<String> getUsernames() {
-    return storage.getTrainerStorage().get(TRAINER_KEY).stream().map(Trainer::getUsername).toList();
+    var usernames =
+        storage.getTrainerStorage().get(TRAINER_KEY).stream().map(Trainer::getUsername).toList();
+    return usernames;
   }
 }

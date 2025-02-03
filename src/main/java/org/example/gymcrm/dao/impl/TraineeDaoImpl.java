@@ -27,20 +27,20 @@ public class TraineeDaoImpl implements TraineeDao {
   @Override
   public void update(String id, Trainee trainee) {
     var trainees = storage.getTraineeStorage().get(TRAINEE_KEY);
-
     trainees.stream()
         .filter(tr -> tr.getUserId().equals(id))
         .findFirst()
-        .ifPresent(
-            tr -> {
-              tr.setFirstName(trainee.getFirstName());
-              tr.setLastName(trainee.getLastName());
-              tr.setUsername(trainee.getUsername());
-              tr.setPassword(trainee.getPassword());
-              tr.setIsActive(trainee.getIsActive());
-              tr.setDateOfBirth(trainee.getDateOfBirth());
-              tr.setAddress(trainee.getAddress());
-            });
+        .ifPresent(tr -> updateTraineeFields(tr, trainee));
+  }
+
+  private static void updateTraineeFields(Trainee existing, Trainee updated) {
+    existing.setFirstName(updated.getFirstName());
+    existing.setLastName(updated.getLastName());
+    existing.setUsername(updated.getUsername());
+    existing.setPassword(updated.getPassword());
+    existing.setIsActive(updated.getIsActive());
+    existing.setDateOfBirth(updated.getDateOfBirth());
+    existing.setAddress(updated.getAddress());
   }
 
   @Override
@@ -50,18 +50,23 @@ public class TraineeDaoImpl implements TraineeDao {
 
   @Override
   public List<Trainee> findAll() {
-    return storage.getTraineeStorage().get(TRAINEE_KEY);
+    var trainees = storage.getTraineeStorage().get(TRAINEE_KEY);
+    return trainees;
   }
 
   @Override
   public Optional<Trainee> findById(String id) {
-    return storage.getTraineeStorage().get(TRAINEE_KEY).stream()
-        .filter(tr -> tr.getUserId().equals(id))
-        .findFirst();
+    Optional<Trainee> optionalTrainee =
+        storage.getTraineeStorage().get(TRAINEE_KEY).stream()
+            .filter(tr -> tr.getUserId().equals(id))
+            .findFirst();
+    return optionalTrainee;
   }
 
   @Override
   public List<String> getUsernames() {
-    return storage.getTraineeStorage().get(TRAINEE_KEY).stream().map(Trainee::getUsername).toList();
+    var usernames =
+        storage.getTraineeStorage().get(TRAINEE_KEY).stream().map(Trainee::getUsername).toList();
+    return usernames;
   }
 }

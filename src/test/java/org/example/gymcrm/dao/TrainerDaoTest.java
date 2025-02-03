@@ -84,4 +84,19 @@ class TrainerDaoTest {
 
     assertThat(result).isEmpty();
   }
+
+  @Test
+  void getUsernames() {
+    var trainer1 = new Trainer();
+    var trainer2 = new Trainer();
+    trainer1.setUsername("john.smith");
+    trainer2.setUsername("john.doe");
+
+    var trainers = List.of(trainer1, trainer2);
+    when(storage.getTrainerStorage()).thenReturn(Map.of(TRAINER_KEY, trainers));
+
+    List<String> actualUsernames = trainerDao.getUsernames();
+
+    assertThat(actualUsernames).contains(trainer1.getUsername(), trainer2.getUsername());
+  }
 }
