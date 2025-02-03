@@ -145,7 +145,7 @@ public class Menu {
     var trainee =
         new Trainee(
             "abcd-1234",
-            "Jane",
+            "John",
             "Smith",
             "john.smith",
             "mypassword",
