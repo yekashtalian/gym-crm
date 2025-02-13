@@ -102,9 +102,6 @@ public class TrainingServiceImpl implements TrainingService {
   public List<TrainingDTO> getTrainingsByTrainerUsername(
       String username, Date fromDate, Date toDate, TrainingType.Type type, String firstName) {
     logger.info("Fetching trainings for trainer: {}", username);
-    trainingTypeDao
-        .findByName(type)
-        .orElseThrow(() -> new TrainerServiceException("Specialization not found"));
 
     trainerDao.findByUsername(username).orElseThrow(() -> new TrainingServiceException(""));
     var trainings =

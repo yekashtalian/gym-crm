@@ -24,18 +24,21 @@ public class Trainee {
   @Column private String address;
 
   @Setter(AccessLevel.PRIVATE)
+  @OnDelete(action = OnDeleteAction.CASCADE)
   @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL)
   private List<Training> trainings = new ArrayList<>();
 
-  @ManyToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE})
+  @ManyToMany
+  @OnDelete(action = OnDeleteAction.CASCADE)
   @JoinTable(
       name = "trainees_trainers",
       joinColumns = @JoinColumn(name = "trainee_id"),
       inverseJoinColumns = @JoinColumn(name = "trainer_id"))
   private List<Trainer> trainers = new ArrayList<>();
 
+  @OneToOne(optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
   @MapsId
-  @OneToOne(optional = false, cascade = CascadeType.ALL)
+  @OnDelete(action = OnDeleteAction.CASCADE)
   @JoinColumn(name = "trainee_id")
   private User user;
 

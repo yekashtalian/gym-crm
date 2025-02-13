@@ -23,7 +23,7 @@ public class Trainer {
   private List<Training> trainings = new ArrayList<>();
 
   @MapsId
-  @OneToOne(optional = false, cascade = CascadeType.ALL)
+  @OneToOne(optional = false)
   @JoinColumn(name = "trainer_id")
   private User user;
 

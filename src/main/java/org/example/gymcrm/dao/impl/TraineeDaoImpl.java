@@ -30,11 +30,14 @@ public class TraineeDaoImpl implements TraineeDao {
 
   @Override
   public void deleteByUsername(String username) {
-    entityManager
-        .createNativeQuery(
-            "DELETE FROM trainees WHERE trainee_id = (SELECT id FROM users WHERE username = :username)")
-        .setParameter("username", username)
-        .executeUpdate();
+    Trainee trainee =
+        entityManager
+            .createQuery(
+                "SELECT tr FROM Trainee tr WHERE tr.user.username = :username", Trainee.class)
+            .setParameter("username", username)
+            .getSingleResult();
+
+    entityManager.remove(trainee);
   }
 
   @Override

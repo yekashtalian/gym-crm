@@ -68,12 +68,8 @@ public class TraineeServiceImpl implements TraineeService {
   }
 
   private static void updateTraineeFields(Trainee trainee, Trainee existingTrainee) {
-    if (trainee.getUser().getFirstName() != null) {
-      existingTrainee.getUser().setFirstName(trainee.getUser().getFirstName());
-    }
-    if (trainee.getUser().getLastName() != null) {
-      existingTrainee.getUser().setLastName(trainee.getUser().getLastName());
-    }
+    existingTrainee.getUser().setFirstName(trainee.getUser().getFirstName());
+    existingTrainee.getUser().setLastName(trainee.getUser().getLastName());
     if (trainee.getUser().getUsername() != null) {
       existingTrainee.getUser().setUsername(trainee.getUser().getUsername());
     }
