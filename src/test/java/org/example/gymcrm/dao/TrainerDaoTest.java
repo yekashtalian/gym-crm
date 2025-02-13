@@ -5,8 +5,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.*;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.TypedQuery;
 import org.example.gymcrm.dao.impl.TrainerDaoImpl;
 import org.example.gymcrm.entity.Trainer;
+import org.example.gymcrm.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,88 +20,120 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class TrainerDaoTest {
-  private static final String TRAINER_KEY = "Trainer";
-  @Mock private Storage storage;
-  private Map<String, List<Trainer>> trainerStorage;
+public class TrainerDaoTest {
 
-  @InjectMocks private TrainerDao trainerDao = new TrainerDaoImpl();
+    @Mock
+    private EntityManager entityManager;
 
-  @BeforeEach
-  void setUp() {
-    trainerStorage = new HashMap<>();
-    when(storage.getTrainerStorage()).thenReturn(trainerStorage);
-  }
+    @InjectMocks
+    private TrainerDaoImpl trainerDao;
 
-  @Test
-  void saveTrainer() {
-    var trainer = new Trainer();
+    private Trainer trainer;
+    private User user;
 
-    trainerDao.save(trainer);
+    @BeforeEach
+    void setUp() {
+        user = new User();
+        user.setUsername("testUser");
 
-    assertThat(trainerStorage).containsKey(TRAINER_KEY);
-    assertThat(trainerStorage.get(TRAINER_KEY).size()).isEqualTo(1);
-    assertThat(trainerStorage.get(TRAINER_KEY).get(0)).isEqualTo(trainer);
-  }
+        trainer = new Trainer();
+        trainer.setId(1L);
+        trainer.setUser(user);
+    }
 
-  @Test
-  void updateTrainer() {
-    var existingTrainer = new Trainer();
-    existingTrainer.setFirstName("OldName");
-    trainerStorage.put("Trainer", new ArrayList<>(List.of(existingTrainer)));
+    @Test
+    void testSave() {
+        trainerDao.save(trainer);
 
-    var updatedTrainer = new Trainer();
-    updatedTrainer.setFirstName("NewName");
+        verify(entityManager, times(1)).persist(trainer);
+    }
 
-    trainerDao.update(existingTrainer.getUserId(), updatedTrainer);
+    @Test
+    void testFindUsernames() {
+        TypedQuery<String> query = mock(TypedQuery.class);
+        when(entityManager.createQuery(anyString(), eq(String.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(Arrays.asList("testUser1", "testUser2"));
 
-    assertThat(trainerStorage.get(TRAINER_KEY).get(0).getFirstName()).isEqualTo("NewName");
-  }
+        List<String> usernames = trainerDao.findUsernames();
 
-  @Test
-  void findAllTrainers() {
-    var trainer1 = new Trainer();
-    var trainer2 = new Trainer();
-    trainerStorage.put("Trainer", new ArrayList<>(List.of(trainer1, trainer2)));
+        assertEquals(2, usernames.size());
+        assertTrue(usernames.contains("testUser1"));
+        assertTrue(usernames.contains("testUser2"));
+    }
 
-    var result = trainerDao.findAll();
+    @Test
+    void testFindByUsername() {
+        TypedQuery<Trainer> query = mock(TypedQuery.class);
+        when(entityManager.createQuery(anyString(), eq(Trainer.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.getSingleResult()).thenReturn(trainer);
 
-    assertThat(result.size()).isEqualTo(2);
-    assertThat(result).contains(trainer1, trainer2);
-  }
+        Optional<Trainer> result = trainerDao.findByUsername("testUser");
 
-  @Test
-  void findTrainerById() {
-    var trainer = new Trainer();
-    trainerStorage.put("Trainer", new ArrayList<>(List.of(trainer)));
+        assertTrue(result.isPresent());
+        assertEquals(trainer, result.get());
+    }
 
-    Optional<Trainer> result = trainerDao.findById(trainer.getUserId());
+    @Test
+    void testFindByUsername_NotFound() {
+        TypedQuery<Trainer> query = mock(TypedQuery.class);
+        when(entityManager.createQuery(anyString(), eq(Trainer.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.getSingleResult()).thenThrow(NoResultException.class);
 
-    assertThat(result).isPresent();
-    assertThat(result.get().getUserId()).isEqualTo(trainer.getUserId());
-  }
+        Optional<Trainer> result = trainerDao.findByUsername("nonExistingUser");
 
-  @Test
-  void findById_ShouldReturnEmptyIfTrainerDoesNotExist() {
-    trainerStorage.put("Trainer", new ArrayList<>());
+        assertFalse(result.isPresent());
+    }
 
-    Optional<Trainer> result = trainerDao.findById("abcd-1234");
+    @Test
+    void testFindById() {
+        when(entityManager.find(Trainer.class, 1L)).thenReturn(trainer);
 
-    assertThat(result).isEmpty();
-  }
+        Optional<Trainer> result = trainerDao.findById(1L);
 
-  @Test
-  void getUsernames() {
-    var trainer1 = new Trainer();
-    var trainer2 = new Trainer();
-    trainer1.setUsername("john.smith");
-    trainer2.setUsername("john.doe");
+        assertTrue(result.isPresent());
+        assertEquals(trainer, result.get());
+    }
 
-    var trainers = List.of(trainer1, trainer2);
-    when(storage.getTrainerStorage()).thenReturn(Map.of(TRAINER_KEY, trainers));
+    @Test
+    void testFindById_NotFound() {
+        when(entityManager.find(Trainer.class, 2L)).thenReturn(null);
 
-    List<String> actualUsernames = trainerDao.getUsernames();
+        Optional<Trainer> result = trainerDao.findById(2L);
 
-    assertThat(actualUsernames).contains(trainer1.getUsername(), trainer2.getUsername());
-  }
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    void testUpdate() {
+        trainerDao.update(trainer);
+
+        verify(entityManager, times(1)).merge(trainer);
+    }
+
+    @Test
+    void testFindUnassignedTrainersByTraineeUsername() {
+        TypedQuery<Trainer> query = mock(TypedQuery.class);
+        when(entityManager.createQuery(anyString(), eq(Trainer.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.getResultList()).thenReturn(Arrays.asList(trainer));
+
+        List<Trainer> trainers = trainerDao.findUnassignedTrainersByTraineeUsername("testUser");
+
+        assertEquals(1, trainers.size());
+        assertEquals(trainer, trainers.get(0));
+    }
+
+    @Test
+    void testFindAll() {
+        TypedQuery<Trainer> query = mock(TypedQuery.class);
+        when(entityManager.createQuery(anyString(), eq(Trainer.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(Arrays.asList(trainer));
+
+        List<Trainer> trainers = trainerDao.findAll();
+
+        assertEquals(1, trainers.size());
+        assertEquals(trainer, trainers.get(0));
+    }
 }

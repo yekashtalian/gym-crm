@@ -1,60 +1,37 @@
 package org.example.gymcrm.entity;
 
-import java.util.UUID;
-import org.example.gymcrm.entity.enums.TrainingType;
+import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.*;
 
-public class Trainer extends User {
+@Entity
+@Table(name = "trainers")
+@Getter
+@Setter
+@ToString(exclude = {"user", "trainees"})
+@NoArgsConstructor
+public class Trainer {
+  @Id private Long id;
+
+  @ManyToOne()
+  @JoinColumn(name = "specialization")
   private TrainingType specialization;
 
-  public Trainer() {
-    setUserId(UUID.randomUUID().toString());
-  }
+  @Setter(AccessLevel.PRIVATE)
+  @OneToMany(mappedBy = "trainer", cascade = CascadeType.ALL)
+  private List<Training> trainings = new ArrayList<>();
 
-  public Trainer(
-      String firstName,
-      String lastName,
-      String username,
-      String password,
-      Boolean isActive,
-      TrainingType specialization) {
-    super(firstName, lastName, username, password, isActive);
-    this.specialization = specialization;
-  }
+  @MapsId
+  @OneToOne(optional = false, cascade = CascadeType.ALL)
+  @JoinColumn(name = "trainer_id")
+  private User user;
 
-  public Trainer(String firstName, String lastName) {
-    super(firstName, lastName);
-  }
+  @ManyToMany(mappedBy = "trainers")
+  private List<Trainee> trainees = new ArrayList<>();
 
-  public TrainingType getSpecialization() {
-    return specialization;
-  }
-
-  public void setSpecialization(TrainingType specialization) {
-    this.specialization = specialization;
-  }
-
-  @Override
-  public String toString() {
-    return "Trainer{id="
-        + super.getUserId()
-        + ", firstName='"
-        + super.getFirstName()
-        + '\''
-        + ", lastName='"
-        + super.getLastName()
-        + '\''
-        + ", username='"
-        + super.getUsername()
-        + '\''
-        + ", password='"
-        + super.getPassword()
-        + '\''
-        + ", isActive='"
-        + super.getIsActive()
-        + '\''
-        + ", specialization='"
-        + specialization
-        + '\''
-        + '}';
+  public void addTraining(Training training) {
+    training.setTrainer(this);
+    trainings.add(training);
   }
 }

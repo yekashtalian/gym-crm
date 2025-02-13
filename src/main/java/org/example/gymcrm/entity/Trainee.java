@@ -1,92 +1,47 @@
 package org.example.gymcrm.entity;
 
-import java.time.LocalDate;
-import java.util.UUID;
+import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import lombok.*;
 
-public class Trainee extends User {
-  private LocalDate dateOfBirth;
-  private String address;
+@Entity
+@Table(name = "trainees")
+@Getter
+@Setter
+@ToString(exclude = "user")
+@NoArgsConstructor
+public class Trainee {
+  @Id private Long id;
 
-  public Trainee(
-      String firstName,
-      String lastName,
-      String username,
-      String password,
-      Boolean isActive,
-      LocalDate dateOfBirth,
-      String address) {
-    super(firstName, lastName, username, password, isActive);
-    this.dateOfBirth = dateOfBirth;
-    this.address = address;
+  @Column
+  @Temporal(TemporalType.DATE)
+  private Date dateOfBirth;
+
+  @Column private String address;
+
+  @Setter(AccessLevel.PRIVATE)
+  @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL)
+  private List<Training> trainings = new ArrayList<>();
+
+  @ManyToMany
+  @JoinTable(
+      name = "trainees_trainers",
+      joinColumns = @JoinColumn(name = "trainee_id"),
+      inverseJoinColumns = @JoinColumn(name = "trainer_id"))
+  private List<Trainer> trainers = new ArrayList<>();
+
+  @MapsId
+  @OneToOne(optional = false, cascade = CascadeType.ALL)
+  @JoinColumn(name = "trainee_id")
+  private User user;
+
+  public void addTrainer(Trainer trainer) {
+    trainers.add(trainer);
   }
 
-  public Trainee(String firstName, String lastName) {
-    super(firstName, lastName);
-  }
-
-  public Trainee(String userId, String firstName, String lastName) {
-    super(userId, firstName, lastName);
-  }
-
-  public Trainee(
-      String userId,
-      String firstName,
-      String lastName,
-      String username,
-      String password,
-      Boolean isActive,
-      LocalDate dateOfBirth,
-      String address) {
-    super(userId, firstName, lastName, username, password, isActive);
-    this.dateOfBirth = dateOfBirth;
-    this.address = address;
-  }
-
-  public Trainee() {
-    setUserId(UUID.randomUUID().toString());
-  }
-
-  public LocalDate getDateOfBirth() {
-    return dateOfBirth;
-  }
-
-  public void setDateOfBirth(LocalDate dateOfBirth) {
-    this.dateOfBirth = dateOfBirth;
-  }
-
-  public String getAddress() {
-    return address;
-  }
-
-  public void setAddress(String address) {
-    this.address = address;
-  }
-
-  @Override
-  public String toString() {
-    return "Trainee{id="
-        + super.getUserId()
-        + ", firstName='"
-        + super.getFirstName()
-        + '\''
-        + ", lastName='"
-        + super.getLastName()
-        + '\''
-        + ", username='"
-        + super.getUsername()
-        + '\''
-        + ", password='"
-        + super.getPassword()
-        + '\''
-        + ", isActive='"
-        + super.getIsActive()
-        + '\''
-        + ", dateOfBirth='"
-        + dateOfBirth
-        + '\''
-        + ", address='"
-        + address
-        + '\''
-        + '}';
+  public void removeTrainer(Trainer trainer) {
+    trainers.remove(trainer);
   }
 }
