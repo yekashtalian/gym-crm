@@ -4,10 +4,16 @@ import static org.example.gymcrm.util.ProfileUtils.*;
 
 import java.util.List;
 import java.util.Optional;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
 import org.example.gymcrm.dto.TrainerProfileDTO;
+import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.exception.AuthenticationException;
 import org.example.gymcrm.exception.TrainerServiceException;
@@ -25,10 +31,16 @@ public class TrainerServiceImpl implements TrainerService {
   @Autowired private TrainerDao trainerDao;
   @Autowired private TraineeDao traineeDao;
   @Autowired private TrainingTypeDao trainingTypeDao;
+  private Validator validator;
+
+  public TrainerServiceImpl() {
+    validator = Validation.buildDefaultValidatorFactory().getValidator();
+  }
 
   @Transactional
   @Override
   public void save(Trainer trainer) {
+    validateTrainer(trainer);
     assignSpecialization(trainer);
     if (trainer.getId() == null) {
       assignGeneratedCredentials(trainer);
@@ -37,6 +49,12 @@ public class TrainerServiceImpl implements TrainerService {
       trainerDao.update(trainer);
     }
     logger.info("Successfully saved {}", trainer);
+  }
+
+  private void validateTrainer(Trainer trainer) {
+    for (ConstraintViolation<Trainer> violation : validator.validate(trainer)) {
+      throw new ValidationException("Invalid trainee field: " + violation.getMessage());
+    }
   }
 
   private void assignSpecialization(Trainer trainer) {
@@ -50,6 +68,7 @@ public class TrainerServiceImpl implements TrainerService {
   @Transactional
   @Override
   public void update(Long id, Trainer trainer) {
+    validateTrainer(trainer);
     var existingTrainer =
         trainerDao.findById(id).orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
     updateTrainerFields(trainer, existingTrainer);
@@ -69,6 +88,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     target.setSpecialization(existingSpecialization);
   }
+
   @Transactional(readOnly = true)
   @Override
   public List<TrainerProfileDTO> getAll() {
@@ -87,6 +107,7 @@ public class TrainerServiceImpl implements TrainerService {
         trainer.getUser().isActive(),
         trainer.getSpecialization().getName().name());
   }
+
   @Transactional(readOnly = true)
   @Override
   public TrainerProfileDTO findByUsername(String username) {
@@ -134,6 +155,7 @@ public class TrainerServiceImpl implements TrainerService {
     existingTrainer.getUser().setActive(oppositeStatus);
     logger.info("Changed status for trainee with id {}", id);
   }
+
   @Transactional(readOnly = true)
   @Override
   public List<Trainer> getUnassignedTrainers(String username) {
@@ -144,6 +166,7 @@ public class TrainerServiceImpl implements TrainerService {
     logger.info("Successfully fetched unassigned trainers");
     return trainers;
   }
+
   @Transactional(readOnly = true)
   @Override
   public boolean authenticate(String username, String password) {
