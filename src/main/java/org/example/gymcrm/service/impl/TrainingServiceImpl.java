@@ -2,11 +2,17 @@ package org.example.gymcrm.service.impl;
 
 import java.util.Date;
 import java.util.List;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
 import org.example.gymcrm.dto.TrainingDTO;
+import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.exception.TrainerServiceException;
@@ -25,6 +31,11 @@ public class TrainingServiceImpl implements TrainingService {
   @Autowired private TraineeDao traineeDao;
   @Autowired private TrainerDao trainerDao;
   @Autowired private TrainingTypeDao trainingTypeDao;
+  private Validator validator;
+
+  public TrainingServiceImpl() {
+    validator = Validation.buildDefaultValidatorFactory().getValidator();
+  }
 
   @Transactional(readOnly = true)
   @Override
@@ -37,6 +48,7 @@ public class TrainingServiceImpl implements TrainingService {
   @Transactional
   @Override
   public void save(Training training) {
+    validateTraining(training);
     logger.info("Saving training: {}", training);
     var trainee =
         traineeDao
@@ -54,6 +66,12 @@ public class TrainingServiceImpl implements TrainingService {
     assignSpecialization(training);
     trainingDao.save(training);
     logger.info("Training saved successfully");
+  }
+
+  private void validateTraining(Training training) {
+    for (ConstraintViolation<Training> violation : validator.validate(training)) {
+      throw new ValidationException("Invalid trainee field: " + violation.getMessage());
+    }
   }
 
   private void assignSpecialization(Training training) {
