@@ -3,9 +3,8 @@ package org.example.gymcrm.entity;
 import static jakarta.persistence.GenerationType.*;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+
 import java.util.Date;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,7 +46,8 @@ public class Training {
 
   @NotNull(message = "Training duration cannot be null")
   @Positive(message = "Training duration cannot be negative number")
-  @Size(min = 25, max = 90, message = "Training duration should be between 25 and 90 minutes")
+  @Min(value = 25, message = "Training duration should be longer than 25 minutes")
+  @Max(value = 90, message = "Training duration should be shorter than 90 minutes")
   @Column(nullable = false)
   private Integer duration;
 }

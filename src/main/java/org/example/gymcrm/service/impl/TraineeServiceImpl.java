@@ -68,11 +68,21 @@ public class TraineeServiceImpl implements TraineeService {
   }
 
   private static void updateTraineeFields(Trainee trainee, Trainee existingTrainee) {
-    existingTrainee.getUser().setFirstName(trainee.getUser().getFirstName());
-    existingTrainee.getUser().setLastName(trainee.getUser().getLastName());
-    existingTrainee.getUser().setUsername(trainee.getUser().getUsername());
-    existingTrainee.setDateOfBirth(trainee.getDateOfBirth());
-    existingTrainee.setAddress(trainee.getAddress());
+    if (trainee.getUser().getFirstName() != null) {
+      existingTrainee.getUser().setFirstName(trainee.getUser().getFirstName());
+    }
+    if (trainee.getUser().getLastName() != null) {
+      existingTrainee.getUser().setLastName(trainee.getUser().getLastName());
+    }
+    if (trainee.getUser().getUsername() != null) {
+      existingTrainee.getUser().setUsername(trainee.getUser().getUsername());
+    }
+    if (trainee.getDateOfBirth() != null) {
+      existingTrainee.setDateOfBirth(trainee.getDateOfBirth());
+    }
+    if (trainee.getAddress() != null) {
+      existingTrainee.setAddress(trainee.getAddress());
+    }
   }
 
   @Transactional
@@ -118,7 +128,8 @@ public class TraineeServiceImpl implements TraineeService {
         trainee.getUser().getPassword(),
         trainee.getUser().isActive(),
         trainee.getDateOfBirth(),
-        trainee.getAddress());
+        trainee.getAddress(),
+        trainee.getTrainers().stream().map(trainer -> trainer.getUser().getUsername()).toList());
   }
 
   @Transactional(readOnly = true)

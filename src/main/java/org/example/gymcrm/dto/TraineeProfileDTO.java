@@ -3,6 +3,7 @@ package org.example.gymcrm.dto;
 import lombok.*;
 
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -18,4 +19,5 @@ public class TraineeProfileDTO {
   private boolean isActive;
   private Date dateOfBirth;
   private String address;
+  private List<String> trainerUsernames;
 }

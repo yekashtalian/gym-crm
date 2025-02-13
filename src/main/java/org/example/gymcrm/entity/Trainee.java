@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "trainees")
@@ -25,7 +27,7 @@ public class Trainee {
   @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL)
   private List<Training> trainings = new ArrayList<>();
 
-  @ManyToMany
+  @ManyToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE})
   @JoinTable(
       name = "trainees_trainers",
       joinColumns = @JoinColumn(name = "trainee_id"),
