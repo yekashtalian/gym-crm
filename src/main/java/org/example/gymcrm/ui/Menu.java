@@ -3,6 +3,8 @@ package org.example.gymcrm.ui;
 import static org.example.gymcrm.util.InputReader.*;
 
 import java.util.Scanner;
+
+import jakarta.validation.ValidationException;
 import org.example.gymcrm.exception.*;
 import org.example.gymcrm.service.TraineeService;
 import org.example.gymcrm.service.TrainerService;
@@ -95,7 +97,8 @@ public class Menu {
           | TrainerServiceException
           | TrainingServiceException
           | ProfileUtilsException
-          | AuthenticationException ex) {
+          | AuthenticationException
+          | ValidationException ex) {
         logger.error(ex.getMessage());
       }
       System.out.println(SEPARATOR);

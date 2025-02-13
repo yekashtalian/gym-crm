@@ -6,7 +6,6 @@ import org.springframework.context.annotation.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-@EnableAspectJAutoProxy
 @EnableTransactionManagement
 @PropertySource("classpath:application.properties")
 @ComponentScan("org.example.gymcrm")

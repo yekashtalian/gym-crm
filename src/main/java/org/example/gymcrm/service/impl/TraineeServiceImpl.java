@@ -1,5 +1,9 @@
 package org.example.gymcrm.service.impl;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dto.TraineeProfileDTO;
@@ -18,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+import static jakarta.validation.Validation.buildDefaultValidatorFactory;
 import static org.example.gymcrm.util.ProfileUtils.*;
 
 @Service
@@ -26,10 +31,16 @@ public class TraineeServiceImpl implements TraineeService {
   private static final String TRAINEE_NOT_FOUND = "This trainee doesn't exist!";
   @Autowired private TraineeDao traineeDao;
   @Autowired private TrainerDao trainerDao;
+  private Validator validator;
+
+  public TraineeServiceImpl() {
+    validator = buildDefaultValidatorFactory().getValidator();
+  }
 
   @Transactional
   @Override
   public void save(Trainee trainee) {
+    validateTrainee(trainee);
     if (trainee.getId() == null) {
       assignGeneratedCredentials(trainee);
       traineeDao.save(trainee);
@@ -39,9 +50,16 @@ public class TraineeServiceImpl implements TraineeService {
     logger.info("Successfully saved {}", trainee);
   }
 
+  private void validateTrainee(Trainee trainee) {
+    for (ConstraintViolation<Trainee> violation : validator.validate(trainee)) {
+      throw new ValidationException("Invalid trainee field: " + violation.getMessage());
+    }
+  }
+
   @Transactional
   @Override
   public void update(Long id, Trainee trainee) {
+    validateTrainee(trainee);
     var existingTrainee =
         traineeDao.findById(id).orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
     updateTraineeFields(trainee, existingTrainee);
