@@ -26,6 +26,7 @@ public class TrainingServiceImpl implements TrainingService {
   @Autowired private TrainerDao trainerDao;
   @Autowired private TrainingTypeDao trainingTypeDao;
 
+  @Transactional(readOnly = true)
   @Override
   public List<TrainingDTO> getAll() {
     var trainings = trainingDao.findAll().stream().map(this::mapToDto).toList();
@@ -64,6 +65,7 @@ public class TrainingServiceImpl implements TrainingService {
     training.setType(trainingType);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public List<TrainingDTO> getTrainingsByTraineeUsername(
       String username, Date fromDate, Date toDate, String firstName) {
@@ -77,6 +79,7 @@ public class TrainingServiceImpl implements TrainingService {
     return trainings;
   }
 
+  @Transactional(readOnly = true)
   @Override
   public List<TrainingDTO> getTrainingsByTrainerUsername(
       String username, Date fromDate, Date toDate, TrainingType.Type type, String firstName) {

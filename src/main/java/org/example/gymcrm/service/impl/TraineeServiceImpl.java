@@ -83,6 +83,7 @@ public class TraineeServiceImpl implements TraineeService {
     logger.info("Successfully changed password for trainee with {} username", username);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public List<TraineeProfileDTO> findAll() {
     var traineesProfiles = traineeDao.findAll().stream().map(this::mapToDto).toList();
@@ -102,6 +103,7 @@ public class TraineeServiceImpl implements TraineeService {
         trainee.getAddress());
   }
 
+  @Transactional(readOnly = true)
   @Override
   public TraineeProfileDTO findByUsername(String username) {
     var existingTrainee =
@@ -134,6 +136,7 @@ public class TraineeServiceImpl implements TraineeService {
     logger.info("Changed status for trainee with id {}", id);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public boolean authenticate(String username, String password) {
     Optional<Trainee> trainee = traineeDao.findByUsername(username);
@@ -144,6 +147,7 @@ public class TraineeServiceImpl implements TraineeService {
     throw new AuthenticationException("Invalid username or password!");
   }
 
+  @Transactional
   @Override
   public void addTrainerToList(String traineeUsername, String trainerUsername) {
     var trainee =
@@ -163,6 +167,7 @@ public class TraineeServiceImpl implements TraineeService {
         "Successfully added trainer: {} to trainee: {} list", trainerUsername, traineeUsername);
   }
 
+  @Transactional
   @Override
   public void removeTrainerFromList(String traineeUsername, String trainerUsername) {
     var trainee =

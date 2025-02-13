@@ -69,7 +69,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     target.setSpecialization(existingSpecialization);
   }
-
+  @Transactional(readOnly = true)
   @Override
   public List<TrainerProfileDTO> getAll() {
     var trainers = trainerDao.findAll().stream().map(this::mapToDto).toList();
@@ -87,7 +87,7 @@ public class TrainerServiceImpl implements TrainerService {
         trainer.getUser().isActive(),
         trainer.getSpecialization().getName().name());
   }
-
+  @Transactional(readOnly = true)
   @Override
   public TrainerProfileDTO findByUsername(String username) {
     var existingTrainer =
@@ -134,7 +134,7 @@ public class TrainerServiceImpl implements TrainerService {
     existingTrainer.getUser().setActive(oppositeStatus);
     logger.info("Changed status for trainee with id {}", id);
   }
-
+  @Transactional(readOnly = true)
   @Override
   public List<Trainer> getUnassignedTrainers(String username) {
     var trainers = trainerDao.findUnassignedTrainersByTraineeUsername(username);
@@ -144,7 +144,7 @@ public class TrainerServiceImpl implements TrainerService {
     logger.info("Successfully fetched unassigned trainers");
     return trainers;
   }
-
+  @Transactional(readOnly = true)
   @Override
   public boolean authenticate(String username, String password) {
     Optional<Trainer> trainer = trainerDao.findByUsername(username);
