@@ -57,7 +57,7 @@ public class InputReader {
       try {
         String input = scanner.nextLine().trim();
         if (allowNull && (input.isEmpty() || input.equals("0"))) {
-          return null; // Return null for empty training type
+          return null;
         }
 
         int choice = Integer.parseInt(input);

@@ -29,12 +29,15 @@ import static org.example.gymcrm.util.ProfileUtils.*;
 public class TraineeServiceImpl implements TraineeService {
   private static final Logger logger = LoggerFactory.getLogger(TraineeServiceImpl.class);
   private static final String TRAINEE_NOT_FOUND = "This trainee doesn't exist!";
-  @Autowired private TraineeDao traineeDao;
-  @Autowired private TrainerDao trainerDao;
-  private Validator validator;
+  private TraineeDao traineeDao;
+  private TrainerDao trainerDao;
+  private final Validator validator;
 
-  public TraineeServiceImpl() {
-    validator = buildDefaultValidatorFactory().getValidator();
+  @Autowired
+  public TraineeServiceImpl(TraineeDao traineeDao, TrainerDao trainerDao) {
+    this.traineeDao = traineeDao;
+    this.trainerDao = trainerDao;
+    this.validator = buildDefaultValidatorFactory().getValidator();
   }
 
   @Transactional
@@ -67,7 +70,7 @@ public class TraineeServiceImpl implements TraineeService {
     logger.info("Successfully updated trainee with id = {}", id);
   }
 
-  private static void updateTraineeFields(Trainee trainee, Trainee existingTrainee) {
+  private void updateTraineeFields(Trainee trainee, Trainee existingTrainee) {
     existingTrainee.getUser().setFirstName(trainee.getUser().getFirstName());
     existingTrainee.getUser().setLastName(trainee.getUser().getLastName());
     if (trainee.getUser().getUsername() != null) {

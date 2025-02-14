@@ -34,4 +34,8 @@ public class Trainer {
     training.setTrainer(this);
     trainings.add(training);
   }
+
+  public Trainer(User user) {
+    this.user = user;
+  }
 }

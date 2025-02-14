@@ -2,18 +2,16 @@ package org.example.gymcrm.service.impl;
 
 import static org.example.gymcrm.util.ProfileUtils.*;
 
-import java.util.List;
-import java.util.Optional;
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
+import java.util.List;
+import java.util.Optional;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
 import org.example.gymcrm.dto.TrainerProfileDTO;
-import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.exception.AuthenticationException;
 import org.example.gymcrm.exception.TrainerServiceException;
@@ -79,13 +77,13 @@ public class TrainerServiceImpl implements TrainerService {
   private void updateTrainerFields(Trainer source, Trainer target) {
     target.getUser().setFirstName(source.getUser().getFirstName());
     target.getUser().setLastName(source.getUser().getLastName());
-    target.getUser().setUsername(source.getUser().getUsername());
-
+    if (target.getUser().getUsername() != null) {
+      target.getUser().setUsername(source.getUser().getUsername());
+    }
     var existingSpecialization =
         trainingTypeDao
             .findByName(source.getSpecialization().getName())
             .orElseThrow(() -> new TrainerServiceException("Specialization not found"));
-
     target.setSpecialization(existingSpecialization);
   }
 

@@ -42,6 +42,10 @@ public class Trainee {
   @JoinColumn(name = "trainee_id")
   private User user;
 
+  public Trainee(User user) {
+    this.user = user;
+  }
+
   public void addTrainer(Trainer trainer) {
     trainers.add(trainer);
   }

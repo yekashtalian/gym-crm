@@ -1,21 +1,18 @@
 package org.example.gymcrm.service.impl;
 
-import java.util.Date;
-import java.util.List;
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
+import java.util.Date;
+import java.util.List;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
 import org.example.gymcrm.dto.TrainingDTO;
-import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.TrainingType;
-import org.example.gymcrm.exception.TrainerServiceException;
 import org.example.gymcrm.exception.TrainingServiceException;
 import org.example.gymcrm.service.TrainingService;
 import org.slf4j.Logger;

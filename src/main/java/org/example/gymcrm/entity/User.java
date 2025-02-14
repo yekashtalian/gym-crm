@@ -5,10 +5,7 @@ import static jakarta.persistence.GenerationType.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 @Entity
 @Table(name = "users")
@@ -42,5 +39,17 @@ public class User {
   public User(String firstName, String lastName) {
     this.firstName = firstName;
     this.lastName = lastName;
+  }
+
+  public User(String firstName, String lastName, String username, String password, boolean isActive) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.username = username;
+    this.password = password;
+    this.isActive = isActive;
+  }
+
+  public User(String username) {
+    this.username = username;
   }
 }

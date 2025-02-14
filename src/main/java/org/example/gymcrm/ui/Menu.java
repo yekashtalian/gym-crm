@@ -2,9 +2,8 @@ package org.example.gymcrm.ui;
 
 import static org.example.gymcrm.util.InputReader.*;
 
-import java.util.Scanner;
-
 import jakarta.validation.ValidationException;
+import java.util.Scanner;
 import org.example.gymcrm.exception.*;
 import org.example.gymcrm.service.TraineeService;
 import org.example.gymcrm.service.TrainerService;
@@ -122,8 +121,10 @@ public class Menu {
   }
 
   private void createTraining() {
-    var training = readTraining(scanner);
-    trainingService.save(training);
+    if (isAuthenticatedTrainer()) {
+      var training = readTraining(scanner);
+      trainingService.save(training);
+    }
   }
 
   private void showTrainings() {
@@ -147,15 +148,11 @@ public class Menu {
   }
 
   private void showAllTrainers() {
-    if (isAuthenticatedTrainer()) {
-      trainerService.getAll().forEach(System.out::println);
-    }
+    trainerService.getAll().forEach(System.out::println);
   }
 
   private void showAllTrainees() {
-    if (isAuthenticatedTrainee()) {
-      traineeService.findAll().forEach(System.out::println);
-    }
+    traineeService.findAll().forEach(System.out::println);
   }
 
   private void showUnassignedTrainers() {
@@ -203,6 +200,7 @@ public class Menu {
       var trainerId = readId(scanner);
       trainerService.changeStatus(trainerId);
     }
+    scanner.nextLine();
   }
 
   private void changeTraineeStatus() {
@@ -210,6 +208,7 @@ public class Menu {
       var traineeId = readId(scanner);
       traineeService.changeStatus(traineeId);
     }
+    scanner.nextLine();
   }
 
   private void changeTraineePassword() {
@@ -251,14 +250,14 @@ public class Menu {
   }
 
   private boolean isAuthenticatedTrainee() {
-    var username = readString(scanner, "Please enter username to authenticate");
-    var password = readString(scanner, "Please enter password to authenticate");
+    var username = readString(scanner, "Please enter trainee username to authenticate");
+    var password = readString(scanner, "Please enter trainee password to authenticate");
     return traineeService.authenticate(username, password);
   }
 
   private boolean isAuthenticatedTrainer() {
-    var username = readString(scanner, "Please enter username to authenticate");
-    var password = readString(scanner, "Please enter password to authenticate");
+    var username = readString(scanner, "Please enter trainer username to authenticate");
+    var password = readString(scanner, "Please enter trainer password to authenticate");
     return trainerService.authenticate(username, password);
   }
 
