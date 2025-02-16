@@ -67,24 +67,32 @@ public class TrainerServiceImpl implements TrainerService {
   @Override
   public void update(Long id, Trainer trainer) {
     validateTrainer(trainer);
+
     var existingTrainer =
         trainerDao.findById(id).orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
+
     updateTrainerFields(trainer, existingTrainer);
     trainerDao.update(existingTrainer);
     logger.info("Successfully updated trainee with id = {}", id);
   }
 
-  private void updateTrainerFields(Trainer source, Trainer target) {
-    target.getUser().setFirstName(source.getUser().getFirstName());
-    target.getUser().setLastName(source.getUser().getLastName());
-    if (target.getUser().getUsername() != null) {
-      target.getUser().setUsername(source.getUser().getUsername());
+  private void updateTrainerFields(Trainer updatedTrainer, Trainer existingTrainer) {
+    var firstName = updatedTrainer.getUser().getFirstName();
+    var lastName = updatedTrainer.getUser().getLastName();
+    var username = updatedTrainer.getUser().getUsername();
+    var specialization = updatedTrainer.getSpecialization().getName();
+
+    existingTrainer.getUser().setFirstName(firstName);
+    existingTrainer.getUser().setLastName(lastName);
+    if (existingTrainer.getUser().getUsername() != null) {
+      existingTrainer.getUser().setUsername(username);
     }
+
     var existingSpecialization =
         trainingTypeDao
-            .findByName(source.getSpecialization().getName())
+            .findByName(specialization)
             .orElseThrow(() -> new TrainerServiceException("Specialization not found"));
-    target.setSpecialization(existingSpecialization);
+    existingTrainer.setSpecialization(existingSpecialization);
   }
 
   @Transactional(readOnly = true)
@@ -109,19 +117,11 @@ public class TrainerServiceImpl implements TrainerService {
   @Transactional(readOnly = true)
   @Override
   public TrainerProfileDTO findByUsername(String username) {
-    var existingTrainer =
+    var trainerProfileDto =
         trainerDao
             .findByUsername(username)
+            .map(this::mapToDto)
             .orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
-
-    var trainerProfileDto = new TrainerProfileDTO();
-    trainerProfileDto.setId(existingTrainer.getId());
-    trainerProfileDto.setFirstName(existingTrainer.getUser().getFirstName());
-    trainerProfileDto.setLastName(existingTrainer.getUser().getLastName());
-    trainerProfileDto.setUsername(existingTrainer.getUser().getUsername());
-    trainerProfileDto.setPassword(existingTrainer.getUser().getPassword());
-    trainerProfileDto.setActive(existingTrainer.getUser().isActive());
-    trainerProfileDto.setSpecialization(existingTrainer.getSpecialization().getName().name());
 
     logger.info("Found trainee with {} username", username);
     return trainerProfileDto;
@@ -131,9 +131,7 @@ public class TrainerServiceImpl implements TrainerService {
   @Override
   public void changePassword(String oldPassword, String newPassword, String username) {
     var existingTrainer =
-        trainerDao
-            .findByUsername(username)
-            .orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
+            getTrainerByUsername(username);
 
     if (!existingTrainer.getUser().getPassword().equals(oldPassword)) {
       throw new TrainerServiceException("Trainer current password doesnt match with old password");
@@ -141,6 +139,12 @@ public class TrainerServiceImpl implements TrainerService {
 
     existingTrainer.getUser().setPassword(newPassword);
     logger.info("Successfully changed password for trainee with {} username", username);
+  }
+
+  private Trainer getTrainerByUsername(String username) {
+    return trainerDao
+            .findByUsername(username)
+            .orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
   }
 
   @Transactional
@@ -157,23 +161,30 @@ public class TrainerServiceImpl implements TrainerService {
   @Transactional(readOnly = true)
   @Override
   public List<Trainer> getUnassignedTrainers(String username) {
-    var trainers = trainerDao.findUnassignedTrainersByTraineeUsername(username);
-    if (trainers.isEmpty()) {
-      throw new TrainerServiceException("There is no unassigned trainers by this username");
-    }
+    var trainers =
+        Optional.ofNullable(trainerDao.findUnassignedTrainersByTraineeUsername(username))
+            .filter(trainerList -> !trainerList.isEmpty())
+            .orElseThrow(
+                () ->
+                    new TrainerServiceException(
+                        "There is no unassigned trainers by this username"));
+
     logger.info("Successfully fetched unassigned trainers");
+
     return trainers;
   }
 
   @Transactional(readOnly = true)
   @Override
   public boolean authenticate(String username, String password) {
-    Optional<Trainer> trainer = trainerDao.findByUsername(username);
-    if (trainer.isPresent() && trainer.get().getUser().getPassword().equals(password)) {
-      logger.info("Successfully authenticated trainer");
-      return true;
-    }
-    throw new AuthenticationException("Invalid username or password!");
+    trainerDao
+        .findByUsername(username)
+        .map(Trainer::getUser)
+        .filter(user -> user.getPassword().equals(password))
+        .orElseThrow(() -> new AuthenticationException("Invalid username or password!"));
+
+    logger.info("Successfully authenticated trainer: {}", username);
+    return true;
   }
 
   private void assignGeneratedCredentials(Trainer trainer) {

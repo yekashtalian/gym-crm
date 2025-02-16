@@ -1,9 +1,12 @@
 package org.example.gymcrm.service.impl;
 
+import static jakarta.validation.Validation.buildDefaultValidatorFactory;
+import static org.example.gymcrm.util.ProfileUtils.*;
+
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
+import java.util.List;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dto.TraineeProfileDTO;
@@ -18,12 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
-
-import static jakarta.validation.Validation.buildDefaultValidatorFactory;
-import static org.example.gymcrm.util.ProfileUtils.*;
 
 @Service
 public class TraineeServiceImpl implements TraineeService {
@@ -63,33 +60,39 @@ public class TraineeServiceImpl implements TraineeService {
   @Override
   public void update(Long id, Trainee trainee) {
     validateTrainee(trainee);
+
     var existingTrainee =
         traineeDao.findById(id).orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
+
     updateTraineeFields(trainee, existingTrainee);
     traineeDao.update(existingTrainee);
     logger.info("Successfully updated trainee with id = {}", id);
   }
 
   private void updateTraineeFields(Trainee trainee, Trainee existingTrainee) {
-    existingTrainee.getUser().setFirstName(trainee.getUser().getFirstName());
-    existingTrainee.getUser().setLastName(trainee.getUser().getLastName());
+    var firstName = trainee.getUser().getFirstName();
+    var lastName = trainee.getUser().getLastName();
+    var username = trainee.getUser().getUsername();
+    var dateOfBirth = trainee.getDateOfBirth();
+    var address = trainee.getAddress();
+
+    existingTrainee.getUser().setFirstName(firstName);
+    existingTrainee.getUser().setLastName(lastName);
     if (trainee.getUser().getUsername() != null) {
-      existingTrainee.getUser().setUsername(trainee.getUser().getUsername());
+      existingTrainee.getUser().setUsername(username);
     }
     if (trainee.getDateOfBirth() != null) {
-      existingTrainee.setDateOfBirth(trainee.getDateOfBirth());
+      existingTrainee.setDateOfBirth(dateOfBirth);
     }
     if (trainee.getAddress() != null) {
-      existingTrainee.setAddress(trainee.getAddress());
+      existingTrainee.setAddress(address);
     }
   }
 
   @Transactional
   @Override
   public void deleteByUsername(String username) {
-    traineeDao
-        .findByUsername(username)
-        .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
+    getTraineeByUsername(username);
     traineeDao.deleteByUsername(username);
     logger.info("Successfully removed trainee by {} username", username);
   }
@@ -97,10 +100,7 @@ public class TraineeServiceImpl implements TraineeService {
   @Transactional
   @Override
   public void changePassword(String oldPassword, String newPassword, String username) {
-    var existingTrainee =
-        traineeDao
-            .findByUsername(username)
-            .orElseThrow(() -> new TrainerServiceException(TRAINEE_NOT_FOUND));
+    var existingTrainee = getTraineeByUsername(username);
 
     if (!existingTrainee.getUser().getPassword().equals(oldPassword)) {
       throw new TrainerServiceException("Trainer current password doesnt match with old password");
@@ -134,20 +134,11 @@ public class TraineeServiceImpl implements TraineeService {
   @Transactional(readOnly = true)
   @Override
   public TraineeProfileDTO findByUsername(String username) {
-    var existingTrainee =
+    var traineeProfileDto =
         traineeDao
             .findByUsername(username)
+            .map(this::mapToDto)
             .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
-
-    var traineeProfileDto = new TraineeProfileDTO();
-    traineeProfileDto.setId(existingTrainee.getId());
-    traineeProfileDto.setFirstName(existingTrainee.getUser().getFirstName());
-    traineeProfileDto.setLastName(existingTrainee.getUser().getLastName());
-    traineeProfileDto.setUsername(existingTrainee.getUser().getUsername());
-    traineeProfileDto.setPassword(existingTrainee.getUser().getPassword());
-    traineeProfileDto.setActive(existingTrainee.getUser().isActive());
-    traineeProfileDto.setDateOfBirth(existingTrainee.getDateOfBirth());
-    traineeProfileDto.setAddress(existingTrainee.getAddress());
 
     logger.info("Found trainee with {} username", username);
     return traineeProfileDto;
@@ -167,29 +158,26 @@ public class TraineeServiceImpl implements TraineeService {
   @Transactional(readOnly = true)
   @Override
   public boolean authenticate(String username, String password) {
-    Optional<Trainee> trainee = traineeDao.findByUsername(username);
-    if (trainee.isPresent() && trainee.get().getUser().getPassword().equals(password)) {
-      logger.info("Successfully authenticated trainee");
-      return true;
-    }
-    throw new AuthenticationException("Invalid username or password!");
+    traineeDao
+        .findByUsername(username)
+        .map(Trainee::getUser)
+        .filter(user -> user.getPassword().equals(password))
+        .orElseThrow(() -> new AuthenticationException("Invalid username or password!"));
+
+    logger.info("Successfully authenticated trainee: {}", username);
+    return true;
   }
 
   @Transactional
   @Override
   public void addTrainerToList(String traineeUsername, String trainerUsername) {
-    var trainee =
-        traineeDao
-            .findByUsername(traineeUsername)
-            .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
-    var trainer =
-        trainerDao
-            .findByUsername(trainerUsername)
-            .orElseThrow(() -> new TraineeServiceException("This trainer doesn't exist"));
+    var trainee = getTraineeByUsername(traineeUsername);
+    var trainer = getTrainerByUsername(trainerUsername);
 
     if (trainee.getTrainers().contains(trainer)) {
       throw new TraineeServiceException("This trainer is already in trainee's favorite list");
     }
+
     trainee.addTrainer(trainer);
     logger.info(
         "Successfully added trainer: {} to trainee: {} list", trainerUsername, traineeUsername);
@@ -198,21 +186,28 @@ public class TraineeServiceImpl implements TraineeService {
   @Transactional
   @Override
   public void removeTrainerFromList(String traineeUsername, String trainerUsername) {
-    var trainee =
-        traineeDao
-            .findByUsername(traineeUsername)
-            .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
-    var trainer =
-        trainerDao
-            .findByUsername(trainerUsername)
-            .orElseThrow(() -> new TraineeServiceException("This trainer doesn't exist"));
+    var trainee = getTraineeByUsername(traineeUsername);
+    var trainer = getTrainerByUsername(trainerUsername);
+
     if (trainee.getTrainers().contains(trainer)) {
       trainee.removeTrainer(trainer);
       logger.info(
-          "Successfully removed trainer: {} from traine: {}", trainerUsername, traineeUsername);
+          "Successfully removed trainer: {} from trainee: {}", trainerUsername, traineeUsername);
     } else {
       throw new TraineeServiceException("This trainer is not in trainee favorite list");
     }
+  }
+
+  private Trainer getTrainerByUsername(String trainerUsername) {
+    return trainerDao
+        .findByUsername(trainerUsername)
+        .orElseThrow(() -> new TraineeServiceException("This trainer doesn't exist"));
+  }
+
+  private Trainee getTraineeByUsername(String traineeUsername) {
+    return traineeDao
+        .findByUsername(traineeUsername)
+        .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
   }
 
   private void assignGeneratedCredentials(Trainee trainee) {

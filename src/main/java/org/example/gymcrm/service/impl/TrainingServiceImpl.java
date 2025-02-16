@@ -11,6 +11,8 @@ import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
 import org.example.gymcrm.dto.TrainingDTO;
+import org.example.gymcrm.entity.Trainee;
+import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.exception.TrainingServiceException;
@@ -46,23 +48,29 @@ public class TrainingServiceImpl implements TrainingService {
   @Override
   public void save(Training training) {
     validateTraining(training);
-    logger.info("Saving training: {}", training);
-    var trainee =
-        traineeDao
-            .findByUsername(training.getTrainee().getUser().getUsername())
-            .orElseThrow(() -> new TrainingServiceException("Trainee not found"));
 
-    var trainer =
-        trainerDao
-            .findByUsername(training.getTrainer().getUser().getUsername())
-            .orElseThrow(() -> new TrainingServiceException("Trainer not found"));
-
+    var traineeUsername = training.getTrainee().getUser().getUsername();
+    var trainerUsername = training.getTrainer().getUser().getUsername();
+    var trainee = getTraineeByUsername(traineeUsername);
+    var trainer = getTrainerByUsername(trainerUsername);
     training.setTrainee(trainee);
     training.setTrainer(trainer);
-
     assignSpecialization(training);
+
     trainingDao.save(training);
     logger.info("Training saved successfully");
+  }
+
+  private Trainer getTrainerByUsername(String username) {
+    return trainerDao
+        .findByUsername(username)
+        .orElseThrow(() -> new TrainingServiceException("Trainer not found"));
+  }
+
+  private Trainee getTraineeByUsername(String username) {
+    return traineeDao
+        .findByUsername(username)
+        .orElseThrow(() -> new TrainingServiceException("Trainee not found"));
   }
 
   private void validateTraining(Training training) {
@@ -84,13 +92,13 @@ public class TrainingServiceImpl implements TrainingService {
   @Override
   public List<TrainingDTO> getTrainingsByTraineeUsername(
       String username, Date fromDate, Date toDate, String firstName) {
-    logger.info("Fetching trainings for trainee: {}", username);
-    traineeDao.findByUsername(username).orElseThrow(() -> new TrainingServiceException(""));
+    getTraineeByUsername(username);
     var trainings =
         trainingDao.getTrainingsByTraineeUsername(username, fromDate, toDate, firstName).stream()
             .map(this::mapToDto)
             .toList();
 
+    logger.info("Successfully fetched trainings for trainee: {}", username);
     return trainings;
   }
 
@@ -98,9 +106,7 @@ public class TrainingServiceImpl implements TrainingService {
   @Override
   public List<TrainingDTO> getTrainingsByTrainerUsername(
       String username, Date fromDate, Date toDate, TrainingType.Type type, String firstName) {
-    logger.info("Fetching trainings for trainer: {}", username);
-
-    trainerDao.findByUsername(username).orElseThrow(() -> new TrainingServiceException(""));
+    getTrainerByUsername(username);
     var trainings =
         trainingDao
             .getTrainingsByTrainerUsername(username, fromDate, toDate, type, firstName)
@@ -108,6 +114,7 @@ public class TrainingServiceImpl implements TrainingService {
             .map(this::mapToDto)
             .toList();
 
+    logger.info("Successfully fetched trainings for trainer: {}", username);
     return trainings;
   }
 
