@@ -1,13 +1,17 @@
 package org.example.gymcrm.dao;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.TypedQuery;
+import java.util.List;
+import java.util.Optional;
+
 import org.example.gymcrm.dao.impl.TraineeDaoImpl;
 import org.example.gymcrm.entity.Trainee;
-import org.junit.jupiter.api.BeforeEach;
+import org.example.gymcrm.entity.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,98 +20,119 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class TraineeDaoTest {
-  private static final String TRAINEE_KEY = "Trainee";
 
-  @Mock private Storage storage;
-  private Map<String, List<Trainee>> traineeStorage;
+  @Mock private EntityManager entityManager;
+  @Mock private TypedQuery<String> usernameQuery;
+  @Mock private TypedQuery<Trainee> traineeQuery;
 
-  @InjectMocks private TraineeDao traineeDao = new TraineeDaoImpl();
+  @InjectMocks private TraineeDaoImpl traineeDao;
 
-  @BeforeEach
-  void setUp() {
-    traineeStorage = new HashMap<>();
-    when(storage.getTraineeStorage()).thenReturn(traineeStorage);
+  private Trainee createTrainee(String username) {
+    User user = new User();
+    user.setUsername(username);
+    user.setPassword("password123");
+    user.setFirstName("John");
+    user.setLastName("Doe");
+    user.setActive(true);
+
+    Trainee trainee = new Trainee();
+    trainee.setUser(user);
+    return trainee;
   }
 
   @Test
-  void saveTrainee() {
-    var trainee = new Trainee();
+  void testSave() {
+    Trainee trainee = createTrainee("trainee1");
 
     traineeDao.save(trainee);
 
-    assertThat(traineeStorage).containsKey(TRAINEE_KEY);
-    assertThat(traineeStorage.size()).isEqualTo(1);
-    assertThat(traineeStorage.get(TRAINEE_KEY).get(0)).isEqualTo(trainee);
+    verify(entityManager, times(1)).persist(trainee);
   }
 
   @Test
-  void updateTrainee() {
-    var existingTrainee = new Trainee();
-    existingTrainee.setFirstName("OldName");
-    traineeStorage.put("Trainee", new ArrayList<>(List.of(existingTrainee)));
+  void testFindUsernames() {
+    when(entityManager.createQuery(anyString(), eq(String.class))).thenReturn(usernameQuery);
+    when(usernameQuery.getResultList()).thenReturn(List.of("trainee1", "trainee2"));
 
-    var updatedTrainee = new Trainee();
-    updatedTrainee.setFirstName("NewName");
+    List<String> usernames = traineeDao.findUsernames();
 
-    traineeDao.update(existingTrainee.getUserId(), updatedTrainee);
-
-    assertThat(traineeStorage.get(TRAINEE_KEY).get(0).getFirstName()).isEqualTo("NewName");
+    assertThat(usernames).containsExactly("trainee1", "trainee2");
+    verify(entityManager, times(1)).createQuery(anyString(), eq(String.class));
+    verify(usernameQuery, times(1)).getResultList();
   }
 
   @Test
-  void removeTrainee() {
-    var trainee = new Trainee();
-    traineeStorage.put("Trainee", new ArrayList<>(List.of(trainee)));
+  void testDeleteByUsername() {
+    Trainee trainee = createTrainee("trainee1");
+    when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(traineeQuery);
+    when(traineeQuery.setParameter("username", "trainee1")).thenReturn(traineeQuery);
+    when(traineeQuery.getSingleResult()).thenReturn(trainee);
 
-    traineeDao.remove(trainee);
+    traineeDao.deleteByUsername("trainee1");
 
-    assertThat(traineeStorage.get(TRAINEE_KEY)).isEmpty();
+    verify(entityManager, times(1)).remove(trainee);
   }
 
   @Test
-  void findAllTrainees() {
-    var trainee1 = new Trainee();
-    var trainee2 = new Trainee();
-    traineeStorage.put("Trainee", new ArrayList<>(List.of(trainee1, trainee2)));
+  void testFindByUsername_Found() {
+    Trainee trainee = createTrainee("trainee1");
+    when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(traineeQuery);
+    when(traineeQuery.setParameter("username", "trainee1")).thenReturn(traineeQuery);
+    when(traineeQuery.getSingleResult()).thenReturn(trainee);
 
-    var result = traineeDao.findAll();
+    Optional<Trainee> result = traineeDao.findByUsername("trainee1");
 
-    assertThat(result.size()).isEqualTo(2);
-    assertThat(result).contains(trainee1, trainee2);
+    assertThat(result).isPresent().contains(trainee);
   }
 
   @Test
-  void findTraineeById() {
-    var trainee = new Trainee();
-    traineeStorage.put("Trainee", new ArrayList<>(List.of(trainee)));
+  void testFindByUsername_NotFound() {
+    when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(traineeQuery);
+    when(traineeQuery.setParameter("username", "trainee1")).thenReturn(traineeQuery);
+    when(traineeQuery.getSingleResult()).thenThrow(new NoResultException());
 
-    Optional<Trainee> result = traineeDao.findById(trainee.getUserId());
-
-    assertThat(result).isPresent();
-    assertThat(result.get().getUserId()).isEqualTo(trainee.getUserId());
-  }
-
-  @Test
-  void findTraineeByIdIfTraineeDoesNotExist() {
-    traineeStorage.put("Trainee", new ArrayList<>());
-
-    Optional<Trainee> result = traineeDao.findById("abcd-123");
+    Optional<Trainee> result = traineeDao.findByUsername("trainee1");
 
     assertThat(result).isEmpty();
   }
 
   @Test
-  void getUsernames() {
-    var trainee1 = new Trainee();
-    var trainee2 = new Trainee();
-    trainee1.setUsername("john.smith");
-    trainee2.setUsername("john.doe");
+  void testFindById_Found() {
+    Trainee trainee = createTrainee("trainee1");
+    when(entityManager.find(Trainee.class, 1L)).thenReturn(trainee);
 
-    var trainees = List.of(trainee1, trainee2);
-    when(storage.getTraineeStorage()).thenReturn(Map.of(TRAINEE_KEY, trainees));
+    Optional<Trainee> result = traineeDao.findById(1L);
 
-    List<String> actualUsernames = traineeDao.getUsernames();
+    assertThat(result).isPresent().contains(trainee);
+  }
 
-    assertThat(actualUsernames).contains(trainee1.getUsername(), trainee2.getUsername());
+  @Test
+  void testFindById_NotFound() {
+    when(entityManager.find(Trainee.class, 1L)).thenReturn(null);
+
+    Optional<Trainee> result = traineeDao.findById(1L);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void testUpdate() {
+    Trainee trainee = createTrainee("trainee1");
+
+    traineeDao.update(trainee);
+
+    verify(entityManager, times(1)).merge(trainee);
+  }
+
+  @Test
+  void testFindAll() {
+    when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(traineeQuery);
+    when(traineeQuery.getResultList()).thenReturn(List.of(createTrainee("trainee1"), createTrainee("trainee2")));
+
+    List<Trainee> trainees = traineeDao.findAll();
+
+    assertThat(trainees).hasSize(2);
+    verify(entityManager, times(1)).createQuery(anyString(), eq(Trainee.class));
+    verify(traineeQuery, times(1)).getResultList();
   }
 }

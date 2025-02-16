@@ -7,13 +7,15 @@ import org.example.gymcrm.entity.Trainee;
 public interface TraineeDao {
   void save(Trainee trainee);
 
-  void update(String id, Trainee trainee);
+  List<String> findUsernames();
 
-  void remove(Trainee trainee);
+  void deleteByUsername(String username);
+
+  Optional<Trainee> findByUsername(String username);
+
+  Optional<Trainee> findById(Long id);
+
+  void update(Trainee trainee);
 
   List<Trainee> findAll();
-
-  Optional<Trainee> findById(String id);
-
-  List<String> getUsernames();
 }

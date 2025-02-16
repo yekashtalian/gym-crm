@@ -1,9 +1,10 @@
 package org.example.gymcrm.dao.impl;
 
-import java.util.ArrayList;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
-import org.example.gymcrm.dao.Storage;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.entity.Trainer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,56 +12,72 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class TrainerDaoImpl implements TrainerDao {
-  private static final String TRAINER_KEY = "Trainer";
-  private Storage storage;
-
-  @Autowired
-  public void setStorage(Storage storage) {
-    this.storage = storage;
-  }
+  @PersistenceContext @Autowired private EntityManager entityManager;
 
   @Override
   public void save(Trainer trainer) {
-    storage.getTrainerStorage().computeIfAbsent(TRAINER_KEY, key -> new ArrayList<>()).add(trainer);
+    entityManager.persist(trainer);
   }
 
   @Override
-  public void update(String id, Trainer trainer) {
-    var trainers = storage.getTrainerStorage().get(TRAINER_KEY);
-    trainers.stream()
-        .filter(tr -> tr.getUserId().equals(id))
-        .findFirst()
-        .ifPresent(tr -> updateTrainerFields(tr, trainer));
-  }
-
-  private static void updateTrainerFields(Trainer existing, Trainer updated) {
-    existing.setFirstName(updated.getFirstName());
-    existing.setLastName(updated.getLastName());
-    existing.setUsername(updated.getUsername());
-    existing.setPassword(updated.getPassword());
-    existing.setIsActive(updated.getIsActive());
-    existing.setSpecialization(updated.getSpecialization());
+  public List<String> findUsernames() {
+    var usernames =
+        entityManager
+            .createQuery("select tr.user.username from Trainer tr", String.class)
+            .getResultList();
+    return usernames;
   }
 
   @Override
-  public List<Trainer> findAll() {
-    var trainers = storage.getTrainerStorage().get(TRAINER_KEY);
+  public Optional<Trainer> findByUsername(String username) {
+    try {
+      var trainer =
+          entityManager
+              .createQuery(
+                  "select tr from Trainer tr join fetch tr.user u where u.username = :username",
+                  Trainer.class)
+              .setParameter("username", username)
+              .getSingleResult();
+      return Optional.of(trainer);
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+
+  @Override
+  public Optional<Trainer> findById(Long id) {
+    var trainer = entityManager.find(Trainer.class, id);
+    return Optional.ofNullable(trainer);
+  }
+
+  @Override
+  public void update(Trainer trainer) {
+    entityManager.merge(trainer);
+  }
+
+  @Override
+  public List<Trainer> findUnassignedTrainersByTraineeUsername(String username) {
+    var trainers =
+        entityManager
+            .createQuery(
+                "select tr from Trainer tr "
+                    + "left join fetch tr.trainings "
+                    + "where tr not in "
+                    + "(select distinct t.trainer from Training t where t.trainee.user.username = :username)",
+                Trainer.class)
+            .setParameter("username", username)
+            .getResultList();
     return trainers;
   }
 
   @Override
-  public Optional<Trainer> findById(String id) {
-    Optional<Trainer> optionalTrainer =
-        storage.getTrainerStorage().get(TRAINER_KEY).stream()
-            .filter(tr -> tr.getUserId().equals(id))
-            .findFirst();
-    return optionalTrainer;
-  }
-
-  @Override
-  public List<String> getUsernames() {
-    var usernames =
-        storage.getTrainerStorage().get(TRAINER_KEY).stream().map(Trainer::getUsername).toList();
-    return usernames;
+  public List<Trainer> findAll() {
+    var trainers =
+        entityManager
+            .createQuery(
+                "select tr from Trainer tr join fetch tr.user join fetch tr.specialization",
+                Trainer.class)
+            .getResultList();
+    return trainers;
   }
 }

@@ -1,11 +1,9 @@
 package org.example.gymcrm.ui;
 
-import java.time.LocalDate;
+import static org.example.gymcrm.util.InputReader.*;
+
+import jakarta.validation.ValidationException;
 import java.util.Scanner;
-import org.example.gymcrm.entity.Trainee;
-import org.example.gymcrm.entity.Trainer;
-import org.example.gymcrm.entity.Training;
-import org.example.gymcrm.entity.enums.TrainingType;
 import org.example.gymcrm.exception.*;
 import org.example.gymcrm.service.TraineeService;
 import org.example.gymcrm.service.TrainerService;
@@ -44,15 +42,26 @@ public class Menu {
                     [1] SELECT TRAINEES IN THE GYM
                     [2] CREATE TRAINEE IN THE GYM
                     [3] UPDATE TRAINEE IN THE GYM
-                    [4] DELETE TRAINEE IN THE GYM
+                    [4] DELETE TRAINEE BY USERNAME IN THE GYM
+                    [5] SELECT TRAINEE BY USERNAME IN THE GYM
+                    [6] CHANGE TRAINEE PASSWORD
+                    [7] CHANGE TRAINEE STATUS
+                    [8] SELECT TRAINEE TRAININGS LIST
 
-                    [5] SELECT TRAINERS IN THE GYM
-                    [6] CREATE TRAINER IN THE GYM
-                    [7] UPDATE TRAINER IN THE GYM
+                    [9] SELECT TRAINERS IN THE GYM
+                    [10] CREATE TRAINER IN THE GYM
+                    [11] UPDATE TRAINER IN THE GYM
+                    [12] SELECT TRAINER BY USERNAME IN THE GYM
+                    [13] CHANGE TRAINER PASSWORD
+                    [14] CHANGE TRAINER STATUS
+                    [15] SELECT TRAINER TRAININGS LIST
+                    [16] SELECT UNASSIGNED TRAINERS BY TRAINEE USERNAME
 
-                    [8] SELECT TRAININGS IN THE GYM
-                    [9] CREATE TRAINING IN THE GYM
-                    [10] TEST USERNAME SCENARIO
+                    [17] SELECT TRAININGS IN THE GYM
+                    [18] CREATE TRAINING IN THE GYM
+
+                    [19] ADD TRAINER TO TRAINEE LIST
+                    [20] REMOVE TRAINER FROM TRAINEE LIST
                 TYPE “EXIT” TO STOP THE PROGRAM AND EXIT!
                         """);
       try {
@@ -61,12 +70,22 @@ public class Menu {
           case "2" -> createTrainee();
           case "3" -> updateTrainee();
           case "4" -> deleteTrainee();
-          case "5" -> showAllTrainers();
-          case "6" -> createTrainer();
-          case "7" -> updateTrainer();
-          case "8" -> showAllTrainings();
-          case "9" -> createTraining();
-          case "10" -> checkUsernameScenario();
+          case "5" -> showTraineeByUsername();
+          case "6" -> changeTraineePassword();
+          case "7" -> changeTraineeStatus();
+          case "8" -> showTraineeTrainings();
+          case "9" -> showAllTrainers();
+          case "10" -> createTrainer();
+          case "11" -> updateTrainer();
+          case "12" -> showTrainerByUsername();
+          case "13" -> changeTrainerPassword();
+          case "14" -> changeTrainerStatus();
+          case "15" -> showTrainerTrainings();
+          case "16" -> showUnassignedTrainers();
+          case "17" -> showTrainings();
+          case "18" -> createTraining();
+          case "19" -> addTrainerToTraineeList();
+          case "20" -> removeTrainerFromTraineeList();
           case "exit" -> {
             running = false;
             exitFromMenu();
@@ -76,112 +95,170 @@ public class Menu {
       } catch (TraineeServiceException
           | TrainerServiceException
           | TrainingServiceException
-          | ProfileUtilsException ex) {
-        logger.warn(ex.getMessage());
-      } catch (StorageException ex) {
+          | ProfileUtilsException
+          | AuthenticationException
+          | ValidationException ex) {
         logger.error(ex.getMessage());
       }
       System.out.println(SEPARATOR);
     }
   }
 
-  void createTraining() {
-    var training =
-        new Training(
-            "550e8400-e29b-41d4-a716-446655440000",
-            "550e8400-e29b-41d4-a716-446655440002",
-            "Strength Training Session",
-            TrainingType.STRENGTH_TRAINING,
-            LocalDate.of(2025, 2, 1),
-            60);
-    trainingService.save(training);
+  private void removeTrainerFromTraineeList() {
+    if (isAuthenticatedTrainee()) {
+      var traineeUsername = readString(scanner, "Please enter trainee username");
+      var trainerUsername = readString(scanner, "Please enter trainer username");
+      traineeService.removeTrainerFromList(traineeUsername, trainerUsername);
+    }
   }
 
-  void showAllTrainings() {
-    trainingService.getAll().forEach(System.out::println);
+  private void addTrainerToTraineeList() {
+    if (isAuthenticatedTrainee()) {
+      var traineeUsername = readString(scanner, "Please enter trainee username");
+      var trainerUsername = readString(scanner, "Please enter trainer username");
+      traineeService.addTrainerToList(traineeUsername, trainerUsername);
+    }
   }
 
-  void updateTrainer() {
-    var updatedTrainer =
-        new Trainer(
-            "UpdatedName",
-            "updatedSurname",
-            "updatedUsername",
-            "updateTrainingName",
-            true,
-            TrainingType.STRENGTH_TRAINING);
-
-    trainerService.update("550e8400-e29b-41d4-a716-446655440009", updatedTrainer);
+  private void createTraining() {
+    if (isAuthenticatedTrainer()) {
+      var training = readTraining(scanner);
+      trainingService.save(training);
+    }
   }
 
-  void createTrainer() {
-    var trainer = new Trainer("John", "Smith");
-    trainerService.save(trainer);
+  private void showTrainings() {
+    System.out.println(trainingService.getAll());
   }
 
-  void showAllTrainers() {
+  private void deleteTrainee() {
+    if (isAuthenticatedTrainee()) {
+      var username = readString(scanner, "Please enter trainee username to delete: ");
+      traineeService.deleteByUsername(username);
+    }
+  }
+
+  private void updateTrainee() {
+    if (isAuthenticatedTrainee()) {
+      var traineeId = readId(scanner);
+      scanner.nextLine();
+      var updatedTrainee = readTraineeToUpdate(scanner);
+      traineeService.update(traineeId, updatedTrainee);
+    }
+  }
+
+  private void showAllTrainers() {
     trainerService.getAll().forEach(System.out::println);
   }
 
-  void deleteTrainee() {
-    traineeService.delete("abcd-1234");
+  private void showAllTrainees() {
+    traineeService.findAll().forEach(System.out::println);
   }
 
-  void updateTrainee() {
-    var updatedTrainee =
-        new Trainee(
-            "UpdatedName",
-            "updatedSurname",
-            "updatedUsername",
-            "updatePassword",
-            true,
-            LocalDate.of(1995, 5, 15),
-            "updatedAddress");
-
-    traineeService.update("550e8400-e29b-41d4-a716-446655440001", updatedTrainee);
+  private void showUnassignedTrainers() {
+    if (isAuthenticatedTrainer()) {
+      var username = readString(scanner, "Please enter trainee username: ");
+      System.out.println(trainerService.getUnassignedTrainers(username));
+    }
   }
 
-  void createTrainee() {
-    var trainee =
-        new Trainee(
-            "abcd-1234",
-            "John",
-            "Smith",
-            "john.smith",
-            "mypassword",
-            true,
-            LocalDate.of(1995, 5, 15),
-            "123 Elm Street");
+  private void showTrainerTrainings() {
+    if (isAuthenticatedTrainer()) {
+      var username = readString(scanner, "Please enter trainer username: ");
+      var fromDate = readDate(scanner, "Please enter from date (yyyy-MM-dd): ");
+      var toDate = readDate(scanner, "Please enter to date (yyyy-MM-dd): ");
+      var type = readTrainingType(scanner, true);
+      var firstName = readString(scanner, "Please enter trainer first name: ");
+      System.out.println(
+          trainingService.getTrainingsByTrainerUsername(
+              username, fromDate, toDate, type, firstName));
+    }
+  }
 
+  private void showTraineeTrainings() {
+    if (isAuthenticatedTrainee()) {
+      var username = readString(scanner, "Please enter trainee username: ");
+      var fromDate = readDate(scanner, "Please enter from date (yyyy-MM-dd): ");
+      var toDate = readDate(scanner, "Please enter to date (yyyy-MM-dd): ");
+      var firstName = readString(scanner, "Please enter trainee first name: ");
+      System.out.println(
+          trainingService.getTrainingsByTraineeUsername(username, fromDate, toDate, firstName));
+    }
+  }
+
+  private void updateTrainer() {
+    if (isAuthenticatedTrainer()) {
+      var trainerId = readId(scanner);
+      scanner.nextLine();
+      var updatedTrainer = readTrainerToUpdate(scanner);
+      trainerService.update(trainerId, updatedTrainer);
+    }
+  }
+
+  private void changeTrainerStatus() {
+    if (isAuthenticatedTrainer()) {
+      var trainerId = readId(scanner);
+      trainerService.changeStatus(trainerId);
+    }
+    scanner.nextLine();
+  }
+
+  private void changeTraineeStatus() {
+    if (isAuthenticatedTrainee()) {
+      var traineeId = readId(scanner);
+      traineeService.changeStatus(traineeId);
+    }
+    scanner.nextLine();
+  }
+
+  private void changeTraineePassword() {
+    if (isAuthenticatedTrainee()) {
+      var arguments = readChangePassword(scanner, "trainee");
+      traineeService.changePassword(arguments[0], arguments[1], arguments[2]);
+    }
+  }
+
+  private void changeTrainerPassword() {
+    if (isAuthenticatedTrainer()) {
+      var arguments = readChangePassword(scanner, "trainer");
+      trainerService.changePassword(arguments[0], arguments[1], arguments[2]);
+    }
+  }
+
+  private void createTrainee() {
+    var trainee = readTrainee(scanner);
     traineeService.save(trainee);
   }
 
-  void showAllTrainees() {
-    traineeService.getAll().forEach(System.out::println);
+  private void createTrainer() {
+    var trainer = readTrainer(scanner);
+    trainerService.save(trainer);
   }
 
-  void checkUsernameScenario() {
-    var trainee = new Trainee("1", "John", "Smith");
-    var trainee1 = new Trainee("2", "John", "Smith");
-    var trainee2 = new Trainee("3", "John", "Smith");
-    traineeService.save(trainee);
-    traineeService.save(trainee1);
-    traineeService.save(trainee2);
+  private void showTraineeByUsername() {
+    if (isAuthenticatedTrainee()) {
+      var username = readString(scanner, "Please enter trainee username: ");
+      System.out.println(traineeService.findByUsername(username));
+    }
+  }
 
-    traineeService.delete("2");
+  private void showTrainerByUsername() {
+    if (isAuthenticatedTrainer()) {
+      var username = readString(scanner, "Please enter trainer username: ");
+      System.out.println(trainerService.findByUsername(username));
+    }
+  }
 
-    var trainee3 = new Trainee("4", "John", "Smith");
-    traineeService.save(trainee3);
+  private boolean isAuthenticatedTrainee() {
+    var username = readString(scanner, "Please enter trainee username to authenticate");
+    var password = readString(scanner, "Please enter trainee password to authenticate");
+    return traineeService.authenticate(username, password);
+  }
 
-    traineeService.delete("3");
-
-    var trainee4 = new Trainee("5", "John", "Smith");
-    traineeService.save(trainee4);
-
-    traineeService.delete("5");
-
-    var trainee5 = new Trainee("6", "John", "Smith");
-    traineeService.save(trainee5);
+  private boolean isAuthenticatedTrainer() {
+    var username = readString(scanner, "Please enter trainer username to authenticate");
+    var password = readString(scanner, "Please enter trainer password to authenticate");
+    return trainerService.authenticate(username, password);
   }
 
   private void exitFromMenu() {
