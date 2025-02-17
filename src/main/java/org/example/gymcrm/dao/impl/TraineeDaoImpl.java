@@ -7,16 +7,17 @@ import java.util.List;
 import java.util.Optional;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.entity.Trainee;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class TraineeDaoImpl implements TraineeDao {
-  @PersistenceContext @Autowired private EntityManager entityManager;
+  @PersistenceContext private EntityManager entityManager;
 
   @Override
-  public void save(Trainee trainee) {
+  public Trainee save(Trainee trainee) {
     entityManager.persist(trainee);
+    return trainee;
   }
 
   @Override

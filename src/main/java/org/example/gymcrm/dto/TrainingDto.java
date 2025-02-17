@@ -9,7 +9,7 @@ import java.util.Date;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class TrainingDTO {
+public class TrainingDto {
   private Long id;
   private String traineeUsername;
   private String trainerUsername;

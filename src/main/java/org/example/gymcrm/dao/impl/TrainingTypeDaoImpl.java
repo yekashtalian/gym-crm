@@ -6,12 +6,11 @@ import jakarta.persistence.PersistenceContext;
 import java.util.Optional;
 import org.example.gymcrm.dao.TrainingTypeDao;
 import org.example.gymcrm.entity.TrainingType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class TrainingTypeDaoImpl implements TrainingTypeDao {
-  @PersistenceContext @Autowired private EntityManager entityManager;
+  @PersistenceContext private EntityManager entityManager;
 
   public Optional<TrainingType> findByName(TrainingType.Type type) {
     try {
@@ -24,5 +23,11 @@ public class TrainingTypeDaoImpl implements TrainingTypeDao {
     } catch (NoResultException e) {
       return Optional.empty();
     }
+  }
+
+  @Override
+  public Optional<TrainingType> findById(Long id) {
+    var trainingType = entityManager.find(TrainingType.class, id);
+    return Optional.ofNullable(trainingType);
   }
 }

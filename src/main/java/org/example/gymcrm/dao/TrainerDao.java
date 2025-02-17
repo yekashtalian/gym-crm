@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.example.gymcrm.entity.Trainer;
 
 public interface TrainerDao {
-  void save(Trainer trainer);
+  Trainer save(Trainer trainer);
 
   List<String> findUsernames();
 

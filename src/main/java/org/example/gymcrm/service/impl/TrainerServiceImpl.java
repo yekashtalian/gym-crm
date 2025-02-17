@@ -8,13 +8,19 @@ import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 import java.util.List;
 import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
-import org.example.gymcrm.dto.TrainerProfileDTO;
+import org.example.gymcrm.dto.RegisterTrainerRequestDto;
+import org.example.gymcrm.dto.RegisterTrainerResponseDto;
+import org.example.gymcrm.dto.TrainerProfileDto;
 import org.example.gymcrm.entity.Trainer;
+import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.exception.AuthenticationException;
 import org.example.gymcrm.exception.TrainerServiceException;
+import org.example.gymcrm.mapper.RegisterTrainerMapper;
 import org.example.gymcrm.service.TrainerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,51 +29,53 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class TrainerServiceImpl implements TrainerService {
   private static final Logger logger = LoggerFactory.getLogger(TrainerServiceImpl.class);
   private static final String TRAINER_NOT_FOUND = "This trainer doesn't exist!";
-  @Autowired private TrainerDao trainerDao;
-  @Autowired private TraineeDao traineeDao;
-  @Autowired private TrainingTypeDao trainingTypeDao;
-  private Validator validator;
-
-  public TrainerServiceImpl() {
-    validator = Validation.buildDefaultValidatorFactory().getValidator();
-  }
+  private final TrainerDao trainerDao;
+  private final TraineeDao traineeDao;
+  private final TrainingTypeDao trainingTypeDao;
+  private final RegisterTrainerMapper registerTrainerMapper;
 
   @Transactional
   @Override
-  public void save(Trainer trainer) {
-    validateTrainer(trainer);
-    assignSpecialization(trainer);
-    if (trainer.getId() == null) {
-      assignGeneratedCredentials(trainer);
-      trainerDao.save(trainer);
-    } else {
-      trainerDao.update(trainer);
-    }
-    logger.info("Successfully saved {}", trainer);
+  public RegisterTrainerResponseDto save(RegisterTrainerRequestDto trainerRequestDto) {
+    var user = registerTrainerMapper.registerDtoToUser(trainerRequestDto);
+    var trainer = new Trainer();
+    trainer.setUser(user);
+    var trainingType = getTrainingType(trainerRequestDto.getSpecializationId());
+    trainer.setSpecialization(trainingType);
+
+    assignGeneratedCredentials(trainer);
+
+    var savedTrainer = trainerDao.save(trainer);
+    var responseDto = registerTrainerMapper.trainerToDto(savedTrainer.getUser());
+
+    logger.info("Successfully registered trainer with username: {}", responseDto.getUsername());
+
+    return responseDto;
   }
 
-  private void validateTrainer(Trainer trainer) {
-    for (ConstraintViolation<Trainer> violation : validator.validate(trainer)) {
-      throw new ValidationException("Invalid trainee field: " + violation.getMessage());
-    }
+  private void assignGeneratedCredentials(Trainer trainer) {
+    var usernames = mergeAllUsernames(traineeDao.findUsernames(), trainerDao.findUsernames());
+    var user = trainer.getUser();
+
+    user.setUsername(generateUsername(user.getFirstName(), user.getLastName(), usernames));
+    user.setPassword(generateRandomPassword());
   }
 
-  private void assignSpecialization(Trainer trainer) {
+  private TrainingType getTrainingType(Long specializationId) {
     var specialization =
         trainingTypeDao
-            .findByName(trainer.getSpecialization().getName())
+            .findById(specializationId)
             .orElseThrow(() -> new TrainerServiceException("Specialization not found"));
-    trainer.setSpecialization(specialization);
+    return specialization;
   }
 
   @Transactional
   @Override
   public void update(Long id, Trainer trainer) {
-    validateTrainer(trainer);
-
     var existingTrainer =
         trainerDao.findById(id).orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
 
@@ -97,14 +105,14 @@ public class TrainerServiceImpl implements TrainerService {
 
   @Transactional(readOnly = true)
   @Override
-  public List<TrainerProfileDTO> getAll() {
+  public List<TrainerProfileDto> getAll() {
     var trainers = trainerDao.findAll().stream().map(this::mapToDto).toList();
     logger.info("Successfully fetched all trainees");
     return trainers;
   }
 
-  private TrainerProfileDTO mapToDto(Trainer trainer) {
-    return new TrainerProfileDTO(
+  private TrainerProfileDto mapToDto(Trainer trainer) {
+    return new TrainerProfileDto(
         trainer.getId(),
         trainer.getUser().getFirstName(),
         trainer.getUser().getLastName(),
@@ -116,7 +124,7 @@ public class TrainerServiceImpl implements TrainerService {
 
   @Transactional(readOnly = true)
   @Override
-  public TrainerProfileDTO findByUsername(String username) {
+  public TrainerProfileDto findByUsername(String username) {
     var trainerProfileDto =
         trainerDao
             .findByUsername(username)
@@ -130,8 +138,7 @@ public class TrainerServiceImpl implements TrainerService {
   @Transactional
   @Override
   public void changePassword(String oldPassword, String newPassword, String username) {
-    var existingTrainer =
-            getTrainerByUsername(username);
+    var existingTrainer = getTrainerByUsername(username);
 
     if (!existingTrainer.getUser().getPassword().equals(oldPassword)) {
       throw new TrainerServiceException("Trainer current password doesnt match with old password");
@@ -143,8 +150,8 @@ public class TrainerServiceImpl implements TrainerService {
 
   private Trainer getTrainerByUsername(String username) {
     return trainerDao
-            .findByUsername(username)
-            .orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
+        .findByUsername(username)
+        .orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
   }
 
   @Transactional
@@ -185,13 +192,5 @@ public class TrainerServiceImpl implements TrainerService {
 
     logger.info("Successfully authenticated trainer: {}", username);
     return true;
-  }
-
-  private void assignGeneratedCredentials(Trainer trainer) {
-    var usernames = mergeAllUsernames(traineeDao.findUsernames(), trainerDao.findUsernames());
-    var user = trainer.getUser();
-
-    user.setUsername(generateUsername(user.getFirstName(), user.getLastName(), usernames));
-    user.setPassword(generateRandomPassword());
   }
 }

@@ -10,7 +10,7 @@ import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
-import org.example.gymcrm.dto.TrainingDTO;
+import org.example.gymcrm.dto.TrainingDto;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
@@ -38,7 +38,7 @@ public class TrainingServiceImpl implements TrainingService {
 
   @Transactional(readOnly = true)
   @Override
-  public List<TrainingDTO> getAll() {
+  public List<TrainingDto> getAll() {
     var trainings = trainingDao.findAll().stream().map(this::mapToDto).toList();
     logger.info("Successfully fetched all trainings");
     return trainings;
@@ -90,7 +90,7 @@ public class TrainingServiceImpl implements TrainingService {
 
   @Transactional(readOnly = true)
   @Override
-  public List<TrainingDTO> getTrainingsByTraineeUsername(
+  public List<TrainingDto> getTrainingsByTraineeUsername(
       String username, Date fromDate, Date toDate, String firstName) {
     getTraineeByUsername(username);
     var trainings =
@@ -104,7 +104,7 @@ public class TrainingServiceImpl implements TrainingService {
 
   @Transactional(readOnly = true)
   @Override
-  public List<TrainingDTO> getTrainingsByTrainerUsername(
+  public List<TrainingDto> getTrainingsByTrainerUsername(
       String username, Date fromDate, Date toDate, TrainingType.Type type, String firstName) {
     getTrainerByUsername(username);
     var trainings =
@@ -118,8 +118,8 @@ public class TrainingServiceImpl implements TrainingService {
     return trainings;
   }
 
-  private TrainingDTO mapToDto(Training training) {
-    return new TrainingDTO(
+  private TrainingDto mapToDto(Training training) {
+    return new TrainingDto(
         training.getId(),
         training.getTrainee().getUser().getUsername(),
         training.getTrainer().getUser().getUsername(),
