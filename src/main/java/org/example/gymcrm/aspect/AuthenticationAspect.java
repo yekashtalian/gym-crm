@@ -26,11 +26,9 @@ public class AuthenticationAspect {
       throw new UnauthorizedException("Missing request context");
     }
 
-    System.out.println("Fetch headers");
     HttpServletRequest request = attributes.getRequest();
     String username = request.getHeader("Username");
     String password = request.getHeader("Password");
-    System.out.println("Fetched headers");
 
     if (username == null || password == null) {
       throw new UnauthorizedException("Missing authentication headers");
