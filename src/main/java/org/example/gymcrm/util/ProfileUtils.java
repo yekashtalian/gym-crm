@@ -8,7 +8,7 @@ import org.example.gymcrm.exception.ProfileUtilsException;
 public class ProfileUtils {
   private static final int PASSWORD_LENGTH = 10;
   private static final String PASSWORD_CHARACTERS =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_+=<>?";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$^*()-_";
   private static final Random RANDOM = new Random();
 
   public static String generateUsername(

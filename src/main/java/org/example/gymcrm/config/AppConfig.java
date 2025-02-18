@@ -11,6 +11,7 @@ import static org.springframework.context.annotation.ComponentScan.*;
 
 @Configuration
 @EnableTransactionManagement
+@EnableAspectJAutoProxy
 @PropertySource("classpath:application.properties")
 @ComponentScan(
     basePackages = "org.example.gymcrm",
