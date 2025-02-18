@@ -1,10 +1,6 @@
 package org.example.gymcrm.service.impl;
 
-import static jakarta.validation.Validation.buildDefaultValidatorFactory;
 import static org.example.gymcrm.util.ProfileUtils.*;
-
-import jakarta.validation.Validator;
-import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
@@ -14,16 +10,17 @@ import org.example.gymcrm.dto.RegisterTraineeResponseDto;
 import org.example.gymcrm.dto.TraineeProfileDto;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
-import org.example.gymcrm.entity.User;
 import org.example.gymcrm.exception.AuthenticationException;
 import org.example.gymcrm.exception.TraineeServiceException;
 import org.example.gymcrm.exception.TrainerServiceException;
-import org.example.gymcrm.mapper.RegisterTraineeMapper;
+import org.example.gymcrm.mapper.TraineeMapper;
 import org.example.gymcrm.service.TraineeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +29,7 @@ public class TraineeServiceImpl implements TraineeService {
   private static final String TRAINEE_NOT_FOUND = "This trainee doesn't exist!";
   private final TraineeDao traineeDao;
   private final TrainerDao trainerDao;
-  private final RegisterTraineeMapper traineeMapper;
+  private final TraineeMapper traineeMapper;
 
   @Transactional
   @Override
@@ -52,8 +49,7 @@ public class TraineeServiceImpl implements TraineeService {
   }
 
   private void assignGeneratedCredentials(Trainee trainee) {
-    var usernames = mergeAllUsernames(traineeDao.findUsernames(),
-            trainerDao.findUsernames());
+    var usernames = mergeAllUsernames(traineeDao.findUsernames(), trainerDao.findUsernames());
     var user = trainee.getUser();
 
     user.setUsername(generateUsername(user.getFirstName(), user.getLastName(), usernames));
@@ -115,35 +111,26 @@ public class TraineeServiceImpl implements TraineeService {
   @Transactional(readOnly = true)
   @Override
   public List<TraineeProfileDto> findAll() {
-    var traineesProfiles = traineeDao.findAll().stream().map(this::mapToDto).toList();
-    logger.info("Successfully fetched all trainees");
-    return traineesProfiles;
-  }
-
-  private TraineeProfileDto mapToDto(Trainee trainee) {
-    return new TraineeProfileDto(
-        trainee.getId(),
-        trainee.getUser().getFirstName(),
-        trainee.getUser().getLastName(),
-        trainee.getUser().getUsername(),
-        trainee.getUser().getPassword(),
-        trainee.getUser().isActive(),
-        trainee.getDateOfBirth(),
-        trainee.getAddress(),
-        trainee.getTrainers().stream().map(trainer -> trainer.getUser().getUsername()).toList());
+    return null;
   }
 
   @Transactional(readOnly = true)
   @Override
   public TraineeProfileDto findByUsername(String username) {
-    var traineeProfileDto =
+    var trainee =
         traineeDao
             .findByUsername(username)
-            .map(this::mapToDto)
             .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
 
+    var traineeProfile = traineeMapper.toProfileDto(trainee);
+    var traineeTrainers =
+        trainee.getTrainers().stream().map(traineeMapper::toTraineeTrainersDto).toList();
+
+    traineeProfile.setTrainers(traineeTrainers);
+
     logger.info("Found trainee with {} username", username);
-    return traineeProfileDto;
+
+    return traineeProfile;
   }
 
   @Transactional

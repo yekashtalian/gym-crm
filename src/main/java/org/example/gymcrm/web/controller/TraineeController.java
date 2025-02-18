@@ -16,7 +16,7 @@ public class TraineeController {
   private final TraineeService traineeService;
 
   @GetMapping("/trainees/{username}")
-  public ResponseEntity<TraineeProfileDto> getTrainee(@PathVariable String username) {
+  public ResponseEntity<TraineeProfileDto> getTrainee(@PathVariable("username") String username) {
     var traineeProfile = traineeService.findByUsername(username);
     return ResponseEntity.ok(traineeProfile);
   }

@@ -11,13 +11,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TraineeProfileDto {
-  private Long id;
   private String firstName;
   private String lastName;
-  private String username;
-  private String password;
-  private boolean isActive;
   private Date dateOfBirth;
   private String address;
-  private List<String> trainerUsernames;
+  private boolean active;
+  private List<TraineeTrainersDto> trainers;
 }

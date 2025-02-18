@@ -2,10 +2,6 @@ package org.example.gymcrm.service.impl;
 
 import static org.example.gymcrm.util.ProfileUtils.*;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.ValidationException;
-import jakarta.validation.Validator;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,11 +16,10 @@ import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.exception.AuthenticationException;
 import org.example.gymcrm.exception.TrainerServiceException;
-import org.example.gymcrm.mapper.RegisterTrainerMapper;
+import org.example.gymcrm.mapper.TrainerMapper;
 import org.example.gymcrm.service.TrainerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,21 +31,21 @@ public class TrainerServiceImpl implements TrainerService {
   private final TrainerDao trainerDao;
   private final TraineeDao traineeDao;
   private final TrainingTypeDao trainingTypeDao;
-  private final RegisterTrainerMapper registerTrainerMapper;
+  private final TrainerMapper trainerMapper;
 
   @Transactional
   @Override
   public RegisterTrainerResponseDto save(RegisterTrainerRequestDto trainerRequestDto) {
-    var user = registerTrainerMapper.registerDtoToUser(trainerRequestDto);
+    var user = trainerMapper.registerDtoToUser(trainerRequestDto);
     var trainer = new Trainer();
     trainer.setUser(user);
+
     var trainingType = getTrainingType(trainerRequestDto.getSpecializationId());
     trainer.setSpecialization(trainingType);
-
     assignGeneratedCredentials(trainer);
 
     var savedTrainer = trainerDao.save(trainer);
-    var responseDto = registerTrainerMapper.trainerToDto(savedTrainer.getUser());
+    var responseDto = trainerMapper.trainerToDto(savedTrainer.getUser());
 
     logger.info("Successfully registered trainer with username: {}", responseDto.getUsername());
 
@@ -106,33 +101,25 @@ public class TrainerServiceImpl implements TrainerService {
   @Transactional(readOnly = true)
   @Override
   public List<TrainerProfileDto> getAll() {
-    var trainers = trainerDao.findAll().stream().map(this::mapToDto).toList();
-    logger.info("Successfully fetched all trainees");
-    return trainers;
-  }
-
-  private TrainerProfileDto mapToDto(Trainer trainer) {
-    return new TrainerProfileDto(
-        trainer.getId(),
-        trainer.getUser().getFirstName(),
-        trainer.getUser().getLastName(),
-        trainer.getUser().getUsername(),
-        trainer.getUser().getPassword(),
-        trainer.getUser().isActive(),
-        trainer.getSpecialization().getName().name());
+    return null;
   }
 
   @Transactional(readOnly = true)
   @Override
   public TrainerProfileDto findByUsername(String username) {
-    var trainerProfileDto =
+    var trainer =
         trainerDao
             .findByUsername(username)
-            .map(this::mapToDto)
             .orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
 
+    var trainerProfile = trainerMapper.toProfileDto(trainer);
+    var trainerTrainees =
+        trainer.getTrainees().stream().map(trainerMapper::toTrainerTraineesDto).toList();
+
+    trainerProfile.setTrainees(trainerTrainees);
+
     logger.info("Found trainee with {} username", username);
-    return trainerProfileDto;
+    return trainerProfile;
   }
 
   @Transactional

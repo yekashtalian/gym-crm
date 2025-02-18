@@ -2,17 +2,13 @@ package org.example.gymcrm.dto;
 
 import lombok.*;
 
-import java.util.List;
-
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class TrainerProfileDto {
+public class TrainerTraineesDto {
+  private String username;
   private String firstName;
   private String lastName;
-  private Long specialization;
-  private boolean active;
-  private List<TrainerTraineesDto> trainees;
 }

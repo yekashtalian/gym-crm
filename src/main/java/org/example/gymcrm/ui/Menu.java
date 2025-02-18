@@ -67,7 +67,6 @@
 //      try {
 //        switch (scanner.nextLine().toLowerCase()) {
 //          case "1" -> showAllTrainees();
-//          case "2" -> createTrainee();
 //          case "3" -> updateTrainee();
 //          case "4" -> deleteTrainee();
 //          case "5" -> showTraineeByUsername();
@@ -75,7 +74,6 @@
 //          case "7" -> changeTraineeStatus();
 //          case "8" -> showTraineeTrainings();
 //          case "9" -> showAllTrainers();
-//          case "10" -> createTrainer();
 //          case "11" -> updateTrainer();
 //          case "12" -> showTrainerByUsername();
 //          case "13" -> changeTrainerPassword();
@@ -223,16 +221,6 @@
 //      var arguments = readChangePassword(scanner, "trainer");
 //      trainerService.changePassword(arguments[0], arguments[1], arguments[2]);
 //    }
-//  }
-//
-//  private void createTrainee() {
-//    var trainee = readTrainee(scanner);
-//    traineeService.save(trainee);
-//  }
-//
-//  private void createTrainer() {
-//    var trainer = readTrainer(scanner);
-//    trainerService.save(trainer);
 //  }
 //
 //  private void showTraineeByUsername() {
