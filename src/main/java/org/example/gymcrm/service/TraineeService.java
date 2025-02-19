@@ -5,16 +5,15 @@ import java.util.List;
 import org.example.gymcrm.dto.RegisterTraineeRequestDto;
 import org.example.gymcrm.dto.RegisterTraineeResponseDto;
 import org.example.gymcrm.dto.TraineeProfileDto;
+import org.example.gymcrm.dto.UpdateTraineeRequestDto;
 import org.example.gymcrm.entity.Trainee;
 
 public interface TraineeService {
   RegisterTraineeResponseDto save(RegisterTraineeRequestDto trainee);
 
-  void update(Long id, Trainee trainee);
+  TraineeProfileDto update(String username, UpdateTraineeRequestDto trainee);
 
   void deleteByUsername(String username);
-
-  void changePassword(String oldPassword, String newPassword, String username);
 
   List<TraineeProfileDto> findAll();
 
@@ -22,7 +21,6 @@ public interface TraineeService {
 
   void changeStatus(Long id);
 
-  boolean authenticate(String username, String password);
 
   void addTrainerToList(String traineeUsername, String trainerUsername);
 

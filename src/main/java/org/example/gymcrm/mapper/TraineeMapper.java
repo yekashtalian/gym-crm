@@ -1,9 +1,6 @@
 package org.example.gymcrm.mapper;
 
-import org.example.gymcrm.dto.RegisterTraineeRequestDto;
-import org.example.gymcrm.dto.RegisterTraineeResponseDto;
-import org.example.gymcrm.dto.TraineeProfileDto;
-import org.example.gymcrm.dto.TraineeTrainersDto;
+import org.example.gymcrm.dto.*;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.User;
@@ -37,4 +34,6 @@ public interface TraineeMapper {
     @Mapping(source = "user.active", target = "active")
   })
   TraineeProfileDto toProfileDto(Trainee trainee);
+
+  Trainee updateDtoToTrainee(UpdateTraineeRequestDto updateTraineeRequestDto);
 }

@@ -1,13 +1,12 @@
 package org.example.gymcrm.config;
 
+import static org.springframework.context.annotation.ComponentScan.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-
-import static org.springframework.context.annotation.ComponentScan.*;
 
 @Configuration
 @EnableTransactionManagement

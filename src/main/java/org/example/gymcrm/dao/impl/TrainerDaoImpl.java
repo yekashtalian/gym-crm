@@ -51,8 +51,8 @@ public class TrainerDaoImpl implements TrainerDao {
   }
 
   @Override
-  public void update(Trainer trainer) {
-    entityManager.merge(trainer);
+  public Trainer update(Trainer trainer) {
+    return entityManager.merge(trainer);
   }
 
   @Override

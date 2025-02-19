@@ -9,11 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
-import org.example.gymcrm.dto.RegisterTrainerRequestDto;
-import org.example.gymcrm.dto.RegisterTrainerResponseDto;
-import org.example.gymcrm.dto.TrainerProfileDto;
+import org.example.gymcrm.dto.*;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.TrainingType;
+import org.example.gymcrm.entity.User;
 import org.example.gymcrm.exception.AuthenticationException;
 import org.example.gymcrm.exception.TrainerServiceException;
 import org.example.gymcrm.mapper.TrainerMapper;
@@ -70,32 +69,42 @@ public class TrainerServiceImpl implements TrainerService {
 
   @Transactional
   @Override
-  public void update(Long id, Trainer trainer) {
-    var existingTrainer =
-        trainerDao.findById(id).orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
+  public TrainerProfileDto update(String username, UpdateTrainerRequestDto trainer) {
+    var existingTrainer = getTrainerByUsername(username);
 
     updateTrainerFields(trainer, existingTrainer);
-    trainerDao.update(existingTrainer);
-    logger.info("Successfully updated trainee with id = {}", id);
+
+    var updatedTrainer = trainerDao.update(existingTrainer);
+
+    var trainerProfile = createTrainerProfile(updatedTrainer);
+    trainerProfile.setUsername(existingTrainer.getUser().getUsername());
+
+    logger.info("Successfully updated trainee with id = {}", username);
+
+    return trainerProfile;
   }
 
-  private void updateTrainerFields(Trainer updatedTrainer, Trainer existingTrainer) {
-    var firstName = updatedTrainer.getUser().getFirstName();
-    var lastName = updatedTrainer.getUser().getLastName();
-    var username = updatedTrainer.getUser().getUsername();
-    var specialization = updatedTrainer.getSpecialization().getName();
+  private TrainerProfileDto createTrainerProfile(Trainer updatedTrainer) {
+    var trainerProfile = trainerMapper.toProfileDto(updatedTrainer);
+    setTraineesToTrainerProfile(updatedTrainer, trainerProfile);
+    return trainerProfile;
+  }
 
-    existingTrainer.getUser().setFirstName(firstName);
-    existingTrainer.getUser().setLastName(lastName);
-    if (existingTrainer.getUser().getUsername() != null) {
-      existingTrainer.getUser().setUsername(username);
-    }
+  private void updateTrainerFields(
+      UpdateTrainerRequestDto updatedTrainer, Trainer existingTrainer) {
+    var user = existingTrainer.getUser();
+    updateUserFields(updatedTrainer, user);
 
-    var existingSpecialization =
-        trainingTypeDao
-            .findByName(specialization)
-            .orElseThrow(() -> new TrainerServiceException("Specialization not found"));
-    existingTrainer.setSpecialization(existingSpecialization);
+    var specialization = updatedTrainer.getSpecializationId();
+    trainingTypeDao
+        .findById(specialization)
+        .orElseThrow(() -> new TrainerServiceException("Specialization not found"));
+  }
+
+  private void updateUserFields(UpdateTrainerRequestDto trainer, User user) {
+    user.setFirstName(trainer.getFirstName());
+    user.setLastName(trainer.getLastName());
+    user.setActive(trainer.isActive());
   }
 
   @Transactional(readOnly = true)
@@ -113,26 +122,16 @@ public class TrainerServiceImpl implements TrainerService {
             .orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
 
     var trainerProfile = trainerMapper.toProfileDto(trainer);
-    var trainerTrainees =
-        trainer.getTrainees().stream().map(trainerMapper::toTrainerTraineesDto).toList();
-
-    trainerProfile.setTrainees(trainerTrainees);
+    setTraineesToTrainerProfile(trainer, trainerProfile);
 
     logger.info("Found trainee with {} username", username);
     return trainerProfile;
   }
 
-  @Transactional
-  @Override
-  public void changePassword(String oldPassword, String newPassword, String username) {
-    var existingTrainer = getTrainerByUsername(username);
-
-    if (!existingTrainer.getUser().getPassword().equals(oldPassword)) {
-      throw new TrainerServiceException("Trainer current password doesnt match with old password");
-    }
-
-    existingTrainer.getUser().setPassword(newPassword);
-    logger.info("Successfully changed password for trainee with {} username", username);
+  private void setTraineesToTrainerProfile(Trainer trainer, TrainerProfileDto trainerProfile) {
+    var trainerTrainees =
+        trainer.getTrainees().stream().map(trainerMapper::toTrainerTraineesDto).toList();
+    trainerProfile.setTrainees(trainerTrainees);
   }
 
   private Trainer getTrainerByUsername(String username) {
@@ -166,18 +165,5 @@ public class TrainerServiceImpl implements TrainerService {
     logger.info("Successfully fetched unassigned trainers");
 
     return trainers;
-  }
-
-  @Transactional(readOnly = true)
-  @Override
-  public boolean authenticate(String username, String password) {
-    trainerDao
-        .findByUsername(username)
-        .map(Trainer::getUser)
-        .filter(user -> user.getPassword().equals(password))
-        .orElseThrow(() -> new AuthenticationException("Invalid username or password!"));
-
-    logger.info("Successfully authenticated trainer: {}", username);
-    return true;
   }
 }

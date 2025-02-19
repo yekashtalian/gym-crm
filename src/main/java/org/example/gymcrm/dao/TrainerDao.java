@@ -13,7 +13,7 @@ public interface TrainerDao {
 
   Optional<Trainer> findById(Long id);
 
-  void update(Trainer trainer);
+  Trainer update(Trainer trainer);
 
   List<Trainer> findUnassignedTrainersByTraineeUsername(String username);
 

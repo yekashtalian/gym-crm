@@ -8,8 +8,10 @@ import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dto.RegisterTraineeRequestDto;
 import org.example.gymcrm.dto.RegisterTraineeResponseDto;
 import org.example.gymcrm.dto.TraineeProfileDto;
+import org.example.gymcrm.dto.UpdateTraineeRequestDto;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
+import org.example.gymcrm.entity.User;
 import org.example.gymcrm.exception.AuthenticationException;
 import org.example.gymcrm.exception.TraineeServiceException;
 import org.example.gymcrm.exception.TrainerServiceException;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -58,33 +61,44 @@ public class TraineeServiceImpl implements TraineeService {
 
   @Transactional
   @Override
-  public void update(Long id, Trainee trainee) {
-    var existingTrainee =
-        traineeDao.findById(id).orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
+  public TraineeProfileDto update(String username, UpdateTraineeRequestDto trainee) {
+    var existingTrainee = getTraineeByUsername(username);
 
     updateTraineeFields(trainee, existingTrainee);
-    traineeDao.update(existingTrainee);
-    logger.info("Successfully updated trainee with id = {}", id);
+
+    var updatedTrainee = traineeDao.update(existingTrainee);
+
+    var traineeProfile = createTraineeProfile(updatedTrainee);
+    traineeProfile.setUsername(existingTrainee.getUser().getUsername());
+
+    logger.info("Successfully updated trainee with username = {}", username);
+    return traineeProfile;
   }
 
-  private void updateTraineeFields(Trainee trainee, Trainee existingTrainee) {
-    var firstName = trainee.getUser().getFirstName();
-    var lastName = trainee.getUser().getLastName();
-    var username = trainee.getUser().getUsername();
-    var dateOfBirth = trainee.getDateOfBirth();
-    var address = trainee.getAddress();
+  private void updateTraineeFields(UpdateTraineeRequestDto trainee, Trainee existingTrainee) {
+    var user = existingTrainee.getUser();
+    updateUserFields(trainee, user);
 
-    existingTrainee.getUser().setFirstName(firstName);
-    existingTrainee.getUser().setLastName(lastName);
-    if (trainee.getUser().getUsername() != null) {
-      existingTrainee.getUser().setUsername(username);
-    }
-    if (trainee.getDateOfBirth() != null) {
-      existingTrainee.setDateOfBirth(dateOfBirth);
-    }
-    if (trainee.getAddress() != null) {
-      existingTrainee.setAddress(address);
-    }
+    Optional.ofNullable(trainee.getDateOfBirth()).ifPresent(existingTrainee::setDateOfBirth);
+    Optional.ofNullable(trainee.getAddress()).ifPresent(existingTrainee::setAddress);
+  }
+
+  private void updateUserFields(UpdateTraineeRequestDto trainee, User user) {
+    user.setFirstName(trainee.getFirstName());
+    user.setLastName(trainee.getLastName());
+    user.setActive(trainee.getActive());
+  }
+
+  private TraineeProfileDto createTraineeProfile(Trainee trainee) {
+    var traineeProfile = traineeMapper.toProfileDto(trainee);
+    setTrainersToTraineeProfile(trainee, traineeProfile);
+    return traineeProfile;
+  }
+
+  private void setTrainersToTraineeProfile(Trainee trainee, TraineeProfileDto traineeProfile) {
+    var traineeTrainers =
+        trainee.getTrainers().stream().map(traineeMapper::toTraineeTrainersDto).toList();
+    traineeProfile.setTrainers(traineeTrainers);
   }
 
   @Transactional
@@ -93,19 +107,6 @@ public class TraineeServiceImpl implements TraineeService {
     getTraineeByUsername(username);
     traineeDao.deleteByUsername(username);
     logger.info("Successfully removed trainee by {} username", username);
-  }
-
-  @Transactional
-  @Override
-  public void changePassword(String oldPassword, String newPassword, String username) {
-    var existingTrainee = getTraineeByUsername(username);
-
-    if (!existingTrainee.getUser().getPassword().equals(oldPassword)) {
-      throw new TrainerServiceException("Trainer current password doesnt match with old password");
-    }
-
-    existingTrainee.getUser().setPassword(newPassword);
-    logger.info("Successfully changed password for trainee with {} username", username);
   }
 
   @Transactional(readOnly = true)
@@ -122,11 +123,7 @@ public class TraineeServiceImpl implements TraineeService {
             .findByUsername(username)
             .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
 
-    var traineeProfile = traineeMapper.toProfileDto(trainee);
-    var traineeTrainers =
-        trainee.getTrainers().stream().map(traineeMapper::toTraineeTrainersDto).toList();
-
-    traineeProfile.setTrainers(traineeTrainers);
+    var traineeProfile = createTraineeProfile(trainee);
 
     logger.info("Found trainee with {} username", username);
 
@@ -142,19 +139,6 @@ public class TraineeServiceImpl implements TraineeService {
 
     existingTrainee.getUser().setActive(oppositeStatus);
     logger.info("Changed status for trainee with id {}", id);
-  }
-
-  @Transactional(readOnly = true)
-  @Override
-  public boolean authenticate(String username, String password) {
-    traineeDao
-        .findByUsername(username)
-        .map(Trainee::getUser)
-        .filter(user -> user.getPassword().equals(password))
-        .orElseThrow(() -> new AuthenticationException("Invalid username or password!"));
-
-    logger.info("Successfully authenticated trainee: {}", username);
-    return true;
   }
 
   @Transactional

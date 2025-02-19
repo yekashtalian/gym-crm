@@ -64,8 +64,8 @@ public class TraineeDaoImpl implements TraineeDao {
   }
 
   @Override
-  public void update(Trainee trainee) {
-    entityManager.merge(trainee);
+  public Trainee update(Trainee trainee) {
+    return entityManager.merge(trainee);
   }
 
   @Override

@@ -1,6 +1,7 @@
 package org.example.gymcrm.web.advice;
 
 import org.example.gymcrm.dto.ErrorResponse;
+import org.example.gymcrm.exception.TraineeServiceException;
 import org.example.gymcrm.exception.UnauthorizedException;
 import org.example.gymcrm.exception.UserServiceException;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,7 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
   }
 
-  @ExceptionHandler(value = UserServiceException.class)
+  @ExceptionHandler(value = {UserServiceException.class, TraineeServiceException.class})
   public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException ex) {
     var errorResponse =
         ErrorResponse.builder()
