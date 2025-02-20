@@ -19,7 +19,7 @@ public interface TraineeService {
 
   TraineeProfileDto findByUsername(String username);
 
-  void changeStatus(Long id);
+  void changeStatus(String username);
 
 
   void addTrainerToList(String traineeUsername, String trainerUsername);

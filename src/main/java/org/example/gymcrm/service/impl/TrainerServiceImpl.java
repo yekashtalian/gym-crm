@@ -137,13 +137,12 @@ public class TrainerServiceImpl implements TrainerService {
 
   @Transactional
   @Override
-  public void changeStatus(Long id) {
-    var existingTrainer =
-        trainerDao.findById(id).orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
+  public void changeStatus(String username) {
+    var existingTrainer = getTrainerByUsername(username);
     var oppositeStatus = !existingTrainer.getUser().isActive();
 
     existingTrainer.getUser().setActive(oppositeStatus);
-    logger.info("Changed status for trainee with id {}", id);
+    logger.info("Changed status for trainee with username {}", username);
   }
 
   @Transactional(readOnly = true)

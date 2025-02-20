@@ -57,4 +57,10 @@ public class TraineeController {
             username, from, to, trainerName, trainingType);
     return ResponseEntity.ok(traineeTrainings);
   }
+
+  @PatchMapping("/trainee/{username}/status")
+  public ResponseEntity<Void> changeStatus(@PathVariable("username") String username) {
+    traineeService.changeStatus(username);
+    return ResponseEntity.ok().build();
+  }
 }

@@ -132,13 +132,12 @@ public class TraineeServiceImpl implements TraineeService {
 
   @Transactional
   @Override
-  public void changeStatus(Long id) {
-    var existingTrainee =
-        traineeDao.findById(id).orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
+  public void changeStatus(String username) {
+    var existingTrainee = getTraineeByUsername(username);
     var oppositeStatus = !existingTrainee.getUser().isActive();
 
     existingTrainee.getUser().setActive(oppositeStatus);
-    logger.info("Changed status for trainee with id {}", id);
+    logger.info("Changed status for trainee with username {}", username);
   }
 
   @Transactional

@@ -59,4 +59,10 @@ public class TrainerController {
         trainingService.getTrainingsByTrainerUsername(username, from, to, traineeName);
     return ResponseEntity.ok(trainerTrainings);
   }
+
+  @PatchMapping("/trainer/{username}/status")
+  public ResponseEntity<Void> changeStatus(@PathVariable("username") String username) {
+    trainerService.changeStatus(username);
+    return ResponseEntity.ok().build();
+  }
 }

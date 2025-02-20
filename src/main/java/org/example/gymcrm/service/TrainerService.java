@@ -17,7 +17,7 @@ public interface TrainerService {
 
   TrainerProfileDto findByUsername(String username);
 
-  void changeStatus(Long id);
+  void changeStatus(String username);
 
   List<TrainerProfileDto> getUnassignedTrainers(String username);
 }
