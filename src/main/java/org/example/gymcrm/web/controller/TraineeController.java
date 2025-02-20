@@ -36,4 +36,10 @@ public class TraineeController {
     var traineeProfile = traineeService.update(username, trainee);
     return ResponseEntity.ok(traineeProfile);
   }
+
+  @DeleteMapping("/trainee/{username}")
+  public ResponseEntity<Void> deleteTrainee(@PathVariable("username") String username) {
+    traineeService.deleteByUsername(username);
+    return ResponseEntity.ok().build();
+  }
 }

@@ -19,5 +19,5 @@ public interface TrainerService {
 
   void changeStatus(Long id);
 
-  List<Trainer> getUnassignedTrainers(String username);
+  List<TrainerProfileDto> getUnassignedTrainers(String username);
 }

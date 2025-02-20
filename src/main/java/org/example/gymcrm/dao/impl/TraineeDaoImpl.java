@@ -34,7 +34,7 @@ public class TraineeDaoImpl implements TraineeDao {
     Trainee trainee =
         entityManager
             .createQuery(
-                "SELECT tr FROM Trainee tr WHERE tr.user.username = :username", Trainee.class)
+                "SELECT tr FROM Trainee tr join fetch tr.user where tr.user.username = :username", Trainee.class)
             .setParameter("username", username)
             .getSingleResult();
 

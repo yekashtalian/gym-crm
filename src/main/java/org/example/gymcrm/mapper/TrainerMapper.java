@@ -31,4 +31,13 @@ public interface TrainerMapper {
     @Mapping(source = "user.active", target = "active"),
   })
   TrainerProfileDto toProfileDto(Trainer trainer);
+
+  @Mappings({
+    @Mapping(source = "user.username", target = "username"),
+    @Mapping(source = "user.firstName", target = "firstName"),
+    @Mapping(source = "user.lastName", target = "lastName"),
+    @Mapping(source = "specialization.id", target = "specialization"),
+    @Mapping(source = "trainees", target = "trainees", ignore = true)
+  })
+  TrainerProfileDto toProfileDtoForUnassigned(Trainer trainer);
 }

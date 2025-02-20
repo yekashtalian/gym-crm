@@ -14,7 +14,7 @@ import lombok.*;
 public class Trainer {
   @Id private Long id;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "specialization")
   private TrainingType specialization;
 

@@ -94,11 +94,6 @@ public class TrainerServiceImpl implements TrainerService {
       UpdateTrainerRequestDto updatedTrainer, Trainer existingTrainer) {
     var user = existingTrainer.getUser();
     updateUserFields(updatedTrainer, user);
-
-    var specialization = updatedTrainer.getSpecializationId();
-    trainingTypeDao
-        .findById(specialization)
-        .orElseThrow(() -> new TrainerServiceException("Specialization not found"));
   }
 
   private void updateUserFields(UpdateTrainerRequestDto trainer, User user) {
@@ -153,17 +148,16 @@ public class TrainerServiceImpl implements TrainerService {
 
   @Transactional(readOnly = true)
   @Override
-  public List<Trainer> getUnassignedTrainers(String username) {
-    var trainers =
-        Optional.ofNullable(trainerDao.findUnassignedTrainersByTraineeUsername(username))
-            .filter(trainerList -> !trainerList.isEmpty())
-            .orElseThrow(
-                () ->
-                    new TrainerServiceException(
-                        "There is no unassigned trainers by this username"));
+  public List<TrainerProfileDto> getUnassignedTrainers(String username) {
+    traineeDao
+        .findByUsername(username)
+        .orElseThrow(() -> new TrainerServiceException("Trainee with such username doesn't exist"));
+    var trainers = trainerDao.findUnassignedTrainersByTraineeUsername(username);
+
+    var trainersProfiles = trainers.stream().map(trainerMapper::toProfileDtoForUnassigned).toList();
 
     logger.info("Successfully fetched unassigned trainers");
 
-    return trainers;
+    return trainersProfiles;
   }
 }

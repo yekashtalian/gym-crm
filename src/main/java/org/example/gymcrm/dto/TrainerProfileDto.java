@@ -13,10 +13,13 @@ import java.util.List;
 public class TrainerProfileDto {
   @JsonInclude(value = JsonInclude.Include.NON_NULL)
   private String username;
+
   private String firstName;
   private String lastName;
   private Long specialization;
-  private boolean active;
+  @JsonInclude(value = JsonInclude.Include.NON_NULL)
+  private Boolean active;
+
   @JsonInclude(value = JsonInclude.Include.NON_EMPTY)
   private List<TrainerTraineesDto> trainees;
 }

@@ -6,6 +6,8 @@ import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 import java.util.Date;
 import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingDao;
@@ -24,17 +26,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class TrainingServiceImpl implements TrainingService {
   private static final Logger logger = LoggerFactory.getLogger(TrainingServiceImpl.class);
-  @Autowired private TrainingDao trainingDao;
-  @Autowired private TraineeDao traineeDao;
-  @Autowired private TrainerDao trainerDao;
-  @Autowired private TrainingTypeDao trainingTypeDao;
-  private Validator validator;
-
-  public TrainingServiceImpl() {
-    validator = Validation.buildDefaultValidatorFactory().getValidator();
-  }
+  private final TrainingDao trainingDao;
+  private final TraineeDao traineeDao;
+  private final TrainerDao trainerDao;
+  private final TrainingTypeDao trainingTypeDao;
 
   @Transactional(readOnly = true)
   @Override
@@ -47,8 +45,6 @@ public class TrainingServiceImpl implements TrainingService {
   @Transactional
   @Override
   public void save(Training training) {
-    validateTraining(training);
-
     var traineeUsername = training.getTrainee().getUser().getUsername();
     var trainerUsername = training.getTrainer().getUser().getUsername();
     var trainee = getTraineeByUsername(traineeUsername);
@@ -71,12 +67,6 @@ public class TrainingServiceImpl implements TrainingService {
     return traineeDao
         .findByUsername(username)
         .orElseThrow(() -> new TrainingServiceException("Trainee not found"));
-  }
-
-  private void validateTraining(Training training) {
-    for (ConstraintViolation<Training> violation : validator.validate(training)) {
-      throw new ValidationException("Invalid trainee field: " + violation.getMessage());
-    }
   }
 
   private void assignSpecialization(Training training) {

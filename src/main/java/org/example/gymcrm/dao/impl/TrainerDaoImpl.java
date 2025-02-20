@@ -57,13 +57,19 @@ public class TrainerDaoImpl implements TrainerDao {
 
   @Override
   public List<Trainer> findUnassignedTrainersByTraineeUsername(String username) {
-    var trainers =
+    List<Trainer> trainers =
         entityManager
             .createQuery(
-                "select tr from Trainer tr "
-                    + "left join fetch tr.trainings "
-                    + "where tr not in "
-                    + "(select distinct t.trainer from Training t where t.trainee.user.username = :username)",
+                    """
+                            select tr from Trainer tr
+                            left join fetch tr.user
+                            left join fetch tr.trainings
+                            where tr not in (
+                              select t.trainer from Training t
+                              where t.trainee.user.username = :username
+                            )
+                            and tr.user.isActive = true
+                            """,
                 Trainer.class)
             .setParameter("username", username)
             .getResultList();
