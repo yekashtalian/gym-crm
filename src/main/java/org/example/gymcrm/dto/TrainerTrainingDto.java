@@ -9,12 +9,10 @@ import java.util.Date;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class TrainingDto {
-  private Long id;
-  private String traineeUsername;
-  private String trainerUsername;
-  private String trainingName;
-  private String trainingType;
+public class TrainerTrainingDto {
+  private String name;
   private Date date;
+  private TrainingTypeDto trainingType;
   private Integer duration;
+  private String traineeName;
 }

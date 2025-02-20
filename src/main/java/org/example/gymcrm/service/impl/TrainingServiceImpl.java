@@ -1,9 +1,5 @@
 package org.example.gymcrm.service.impl;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.ValidationException;
-import jakarta.validation.Validator;
 import java.util.Date;
 import java.util.List;
 
@@ -12,16 +8,17 @@ import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
-import org.example.gymcrm.dto.TrainingDto;
+import org.example.gymcrm.dto.TraineeTrainingDto;
+import org.example.gymcrm.dto.TrainerTrainingDto;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.exception.TrainingServiceException;
+import org.example.gymcrm.mapper.TrainingMapper;
 import org.example.gymcrm.service.TrainingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,13 +30,12 @@ public class TrainingServiceImpl implements TrainingService {
   private final TraineeDao traineeDao;
   private final TrainerDao trainerDao;
   private final TrainingTypeDao trainingTypeDao;
+  private final TrainingMapper trainingMapper;
 
   @Transactional(readOnly = true)
   @Override
-  public List<TrainingDto> getAll() {
-    var trainings = trainingDao.findAll().stream().map(this::mapToDto).toList();
-    logger.info("Successfully fetched all trainings");
-    return trainings;
+  public List<TraineeTrainingDto> getAll() {
+    return null;
   }
 
   @Transactional
@@ -80,42 +76,46 @@ public class TrainingServiceImpl implements TrainingService {
 
   @Transactional(readOnly = true)
   @Override
-  public List<TrainingDto> getTrainingsByTraineeUsername(
-      String username, Date fromDate, Date toDate, String firstName) {
+  public List<TraineeTrainingDto> getTrainingsByTraineeUsername(
+      String username, Date fromDate, Date toDate, String trainerName, String trainingTypeName) {
     getTraineeByUsername(username);
+    var trainingType = parseTrainingType(trainingTypeName);
     var trainings =
-        trainingDao.getTrainingsByTraineeUsername(username, fromDate, toDate, firstName).stream()
-            .map(this::mapToDto)
-            .toList();
+        trainingDao.getTrainingsByTraineeUsername(
+            username, fromDate, toDate, trainerName, trainingType);
+
+    var traineeTrainingsDto =
+        trainings.stream().map(trainingMapper::toTraineeTrainingsDto).toList();
 
     logger.info("Successfully fetched trainings for trainee: {}", username);
-    return trainings;
+
+    return traineeTrainingsDto;
+  }
+
+  private TrainingType parseTrainingType(String trainingTypeName) {
+    TrainingType trainingType = null;
+    if (trainingTypeName != null && !trainingTypeName.isBlank()) {
+      trainingType =
+          trainingTypeDao
+              .findByName(TrainingType.Type.valueOf(trainingTypeName))
+              .orElseThrow(() -> new TrainingServiceException("Training type not found"));
+    }
+    return trainingType;
   }
 
   @Transactional(readOnly = true)
   @Override
-  public List<TrainingDto> getTrainingsByTrainerUsername(
-      String username, Date fromDate, Date toDate, TrainingType.Type type, String firstName) {
+  public List<TrainerTrainingDto> getTrainingsByTrainerUsername(
+      String username, Date fromDate, Date toDate, String traineeName) {
     getTrainerByUsername(username);
     var trainings =
-        trainingDao
-            .getTrainingsByTrainerUsername(username, fromDate, toDate, type, firstName)
-            .stream()
-            .map(this::mapToDto)
-            .toList();
+        trainingDao.getTrainingsByTrainerUsername(username, fromDate, toDate, traineeName);
 
-    logger.info("Successfully fetched trainings for trainer: {}", username);
-    return trainings;
-  }
+    var trainerTrainingsDto =
+        trainings.stream().map(trainingMapper::toTrainerTrainingsDto).toList();
 
-  private TrainingDto mapToDto(Training training) {
-    return new TrainingDto(
-        training.getId(),
-        training.getTrainee().getUser().getUsername(),
-        training.getTrainer().getUser().getUsername(),
-        training.getName(),
-        training.getType().getName().name(),
-        training.getDate(),
-        training.getDuration());
+    logger.info("Successfully fetched trainings for trainee: {}", username);
+
+    return trainerTrainingsDto;
   }
 }

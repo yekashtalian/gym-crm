@@ -3,16 +3,19 @@ package org.example.gymcrm.service;
 import java.util.Date;
 import java.util.List;
 
-import org.example.gymcrm.dto.TrainingDto;
+import org.example.gymcrm.dto.TraineeTrainingDto;
+import org.example.gymcrm.dto.TrainerTrainingDto;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.TrainingType;
 
 public interface TrainingService {
-  List<TrainingDto> getAll();
-  void save(Training training);
-  List<TrainingDto> getTrainingsByTraineeUsername(
-          String username, Date fromDate, Date toDate, String firstName);
+  List<TraineeTrainingDto> getAll();
 
-  List<TrainingDto> getTrainingsByTrainerUsername(
-          String username, Date fromDate, Date toDate, TrainingType.Type type, String firstName);
+  void save(Training training);
+
+  List<TraineeTrainingDto> getTrainingsByTraineeUsername(
+      String username, Date fromDate, Date toDate, String trainerName, String trainingTypeName);
+
+  List<TrainerTrainingDto> getTrainingsByTrainerUsername(
+      String username, Date fromDate, Date toDate, String traineeName);
 }

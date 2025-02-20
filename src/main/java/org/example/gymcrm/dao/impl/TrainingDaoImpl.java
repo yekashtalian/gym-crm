@@ -35,7 +35,7 @@ public class TrainingDaoImpl implements TrainingDao {
 
   @Override
   public List<Training> getTrainingsByTraineeUsername(
-      String username, Date fromDate, Date toDate, String firstName) {
+      String username, Date fromDate, Date toDate, String trainerName, TrainingType trainingType) {
     var trainings =
         entityManager
             .createQuery(
@@ -43,41 +43,48 @@ public class TrainingDaoImpl implements TrainingDao {
                         SELECT t FROM Training t
                         JOIN t.trainee trainee
                         WHERE trainee.user.username = :username
-                        AND (CAST(:fromDate AS date)) IS NULL OR t.date >= :fromDate
-                        AND (CAST(:toDate AS date)) IS NULL OR t.date <= :toDate
-                        AND (:firstName IS NULL OR trainee.user.firstName = :firstName)
-                        """,
+                        AND (
+                        :fromDate IS NULL OR t.date >= :fromDate
+                        )
+                        AND (
+                        :toDate IS NULL OR t.date <= :toDate
+                        )
+                        AND (
+                        :trainerName IS NULL OR t.trainer.user.firstName = :trainerName
+                        )
+                        AND (
+                        :trainingType IS NULL OR t.type = :trainingType
+                        )
+                                                                         """,
                 Training.class)
             .setParameter("username", username)
             .setParameter("fromDate", fromDate)
             .setParameter("toDate", toDate)
-            .setParameter("firstName", firstName)
+            .setParameter("trainerName", trainerName)
+            .setParameter("trainingType", trainingType)
             .getResultList();
     return trainings;
   }
 
   @Override
   public List<Training> getTrainingsByTrainerUsername(
-      String username, Date fromDate, Date toDate, TrainingType.Type type, String firstName) {
+      String username, Date fromDate, Date toDate, String traineeName) {
     var trainings =
         entityManager
             .createQuery(
                 """
-                            SELECT t FROM Training t
-                            JOIN t.trainer trainer
-                            JOIN t.trainer.specialization spec
-                            WHERE trainer.user.username = :username
-                            AND (CAST(:fromDate AS date)) IS NULL OR t.date >= :fromDate
-                            AND (CAST(:toDate AS date)) IS NULL OR t.date <= :toDate
-                            AND (:firstName IS NULL OR trainer.user.firstName = :firstName)
-                            AND (:type IS NULL OR spec.name = :type)
-                            """,
+                        SELECT t FROM Training t
+                        JOIN FETCH t.trainer trainer
+                        WHERE trainer.user.username = :username
+                        AND (:fromDate IS NULL OR t.date >= :fromDate)
+                        AND (:toDate IS NULL OR t.date <= :toDate)
+                        AND (:traineeName IS NULL OR trainer.user.firstName = :traineeName)
+                        """,
                 Training.class)
             .setParameter("username", username)
             .setParameter("fromDate", fromDate)
             .setParameter("toDate", toDate)
-            .setParameter("type", type)
-            .setParameter("firstName", firstName)
+            .setParameter("traineeName", traineeName)
             .getResultList();
     return trainings;
   }
