@@ -2,6 +2,7 @@ package org.example.gymcrm.mapper;
 
 import org.example.gymcrm.dto.TraineeTrainingDto;
 import org.example.gymcrm.dto.TrainerTrainingDto;
+import org.example.gymcrm.dto.TrainingDto;
 import org.example.gymcrm.entity.Training;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -26,4 +27,13 @@ public interface TrainingMapper {
     @Mapping(source = "trainee.user.firstName", target = "traineeName")
   })
   TrainerTrainingDto toTrainerTrainingsDto(Training training);
+
+  @Mappings({
+    @Mapping(source = "traineeUsername", target = "trainee.user.username"),
+    @Mapping(source = "trainerUsername", target = "trainer.user.username"),
+    @Mapping(source = "trainingName", target = "name"),
+    @Mapping(source = "trainingDate", target = "date"),
+    @Mapping(source = "duration", target = "duration"),
+  })
+  Training toTraining(TrainingDto trainingDto);
 }

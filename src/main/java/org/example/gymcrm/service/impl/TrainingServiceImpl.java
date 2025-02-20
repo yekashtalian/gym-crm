@@ -10,6 +10,7 @@ import org.example.gymcrm.dao.TrainingDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
 import org.example.gymcrm.dto.TraineeTrainingDto;
 import org.example.gymcrm.dto.TrainerTrainingDto;
+import org.example.gymcrm.dto.TrainingDto;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
@@ -40,16 +41,16 @@ public class TrainingServiceImpl implements TrainingService {
 
   @Transactional
   @Override
-  public void save(Training training) {
-    var traineeUsername = training.getTrainee().getUser().getUsername();
-    var trainerUsername = training.getTrainer().getUser().getUsername();
-    var trainee = getTraineeByUsername(traineeUsername);
-    var trainer = getTrainerByUsername(trainerUsername);
-    training.setTrainee(trainee);
-    training.setTrainer(trainer);
-    assignSpecialization(training);
+  public void save(TrainingDto trainingDto) {
+    var trainer = getTrainerByUsername(trainingDto.getTrainerUsername());
+    var trainee = getTraineeByUsername(trainingDto.getTraineeUsername());
 
-    trainingDao.save(training);
+    var trainingToSave = trainingMapper.toTraining(trainingDto);
+    trainingToSave.setTrainer(trainer);
+    trainingToSave.setTrainee(trainee);
+
+    trainingDao.save(trainingToSave);
+
     logger.info("Training saved successfully");
   }
 
@@ -65,14 +66,14 @@ public class TrainingServiceImpl implements TrainingService {
         .orElseThrow(() -> new TrainingServiceException("Trainee not found"));
   }
 
-  private void assignSpecialization(Training training) {
-    logger.info("Assigning specialization for training");
-    var trainingType =
-        trainingTypeDao
-            .findByName(training.getType().getName())
-            .orElseThrow(() -> new TrainingServiceException("Training type not found"));
-    training.setType(trainingType);
-  }
+  //  private void assignSpecialization(Training training) {
+  //    logger.info("Assigning specialization for training");
+  //    var trainingType =
+  //        trainingTypeDao
+  //            .findByName(training.getType().getName())
+  //            .orElseThrow(() -> new TrainingServiceException("Training type not found"));
+  //    training.setType(trainingType);
+  //  }
 
   @Transactional(readOnly = true)
   @Override
