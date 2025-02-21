@@ -12,5 +12,8 @@ public interface TrainingTypeMapper {
     @Mapping(source = "name", target = "name"),
     @Mapping(source = "id", target = "id", ignore = true)
   })
-  TrainingTypeDto toDto(TrainingType trainingType);
+  TrainingTypeDto toDtoWithoutId(TrainingType trainingType);
+
+  @Mappings({@Mapping(source = "name", target = "name"), @Mapping(source = "id", target = "id")})
+  TrainingTypeDto toDtoWithId(TrainingType trainingType);
 }
