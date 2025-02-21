@@ -8,6 +8,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UpdateTrainerRequestDto {
   @NotBlank(message = "Username field is required in request")
   private String username;

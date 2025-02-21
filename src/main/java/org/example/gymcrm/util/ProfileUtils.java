@@ -65,14 +65,4 @@ public class ProfileUtils {
 
     return password.toString();
   }
-
-  public static void validateFirstAndLastName(String firstName, String lastName) {
-    if (isNullOrEmpty(firstName) || isNullOrEmpty(lastName)) {
-      throw new ProfileUtilsException("First or Last name cannot be empty or null");
-    }
-  }
-
-  private static boolean isNullOrEmpty(String str) {
-    return str == null || str.isEmpty();
-  }
 }

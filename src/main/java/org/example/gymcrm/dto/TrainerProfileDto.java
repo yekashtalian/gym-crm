@@ -10,6 +10,7 @@ import java.util.List;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class TrainerProfileDto {
   @JsonInclude(value = JsonInclude.Include.NON_NULL)
   private String username;
@@ -17,6 +18,7 @@ public class TrainerProfileDto {
   private String firstName;
   private String lastName;
   private Long specialization;
+
   @JsonInclude(value = JsonInclude.Include.NON_NULL)
   private Boolean active;
 

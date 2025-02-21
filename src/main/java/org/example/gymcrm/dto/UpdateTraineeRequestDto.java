@@ -1,5 +1,6 @@
 package org.example.gymcrm.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -11,6 +12,7 @@ import java.util.Date;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UpdateTraineeRequestDto {
   @NotEmpty(message = "Trainee username cannot be empty")
   private String username;
@@ -20,6 +22,7 @@ public class UpdateTraineeRequestDto {
 
   @NotEmpty(message = "Trainee last name cannot be empty")
   private String lastName;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 
   private Date dateOfBirth;
   private String address;

@@ -9,6 +9,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class RegisterTrainerRequestDto {
   @NotEmpty(message = "Trainer first name cannot be empty")
   private String firstName;

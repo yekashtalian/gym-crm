@@ -7,7 +7,12 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class RegisterTrainerResponseDto {
   private String username;
   private String password;
+
+  public RegisterTrainerResponseDto(String username) {
+    this.username = username;
+  }
 }

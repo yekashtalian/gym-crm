@@ -1,184 +1,188 @@
-//package org.example.gymcrm.service;
+package org.example.gymcrm.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import org.example.gymcrm.dao.TraineeDao;
+import org.example.gymcrm.dao.TrainerDao;
+import org.example.gymcrm.dao.TrainingTypeDao;
+import org.example.gymcrm.dto.*;
+import org.example.gymcrm.entity.Trainer;
+import org.example.gymcrm.entity.TrainingType;
+import org.example.gymcrm.entity.User;
+import org.example.gymcrm.exception.TrainerServiceException;
+import org.example.gymcrm.mapper.TrainerMapper;
+import org.example.gymcrm.service.impl.TrainerServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+public class TrainerServiceTest {
+
+  @Mock private TrainerDao trainerDao;
+
+  @Mock private TraineeDao traineeDao;
+
+  @Mock private TrainingTypeDao trainingTypeDao;
+
+  @Mock private TrainerMapper trainerMapper;
+
+  @InjectMocks private TrainerServiceImpl trainerService;
+
+  private Trainer trainer;
+  private User user;
+  private TrainingType trainingType;
+  private RegisterTrainerRequestDto registerTrainerRequestDto;
+  private RegisterTrainerResponseDto registerTrainerResponseDto;
+  private UpdateTrainerRequestDto updateTrainerRequestDto;
+  private TrainerProfileDto trainerProfileDto;
+
+  @BeforeEach
+  void setUp() {
+    user = new User();
+    user.setFirstName("John");
+    user.setLastName("Doe");
+    user.setUsername("john.doe");
+    user.setPassword("password");
+    user.setActive(true);
+
+    trainingType = new TrainingType();
+    trainingType.setId(1L);
+    trainingType.setName(TrainingType.Type.CARDIO);
+
+    trainer = new Trainer();
+    trainer.setUser(user);
+    trainer.setSpecialization(trainingType);
+
+    registerTrainerRequestDto = new RegisterTrainerRequestDto();
+    registerTrainerRequestDto.setFirstName("John");
+    registerTrainerRequestDto.setLastName("Doe");
+    registerTrainerRequestDto.setSpecializationId(1L);
+
+    registerTrainerResponseDto = new RegisterTrainerResponseDto();
+    registerTrainerResponseDto.setUsername("john.doe");
+
+    updateTrainerRequestDto = new UpdateTrainerRequestDto();
+    updateTrainerRequestDto.setFirstName("Jane");
+    updateTrainerRequestDto.setLastName("Doe");
+    updateTrainerRequestDto.setActive(false);
+
+    trainerProfileDto = new TrainerProfileDto();
+    trainerProfileDto.setUsername("john.doe");
+    trainerProfileDto.setFirstName("John");
+    trainerProfileDto.setLastName("Doe");
+    trainerProfileDto.setSpecialization(1L);
+    trainerProfileDto.setActive(true);
+  }
+
+//  @Test
+//  void testSave() {
+//    when(trainerMapper.registerDtoToUser(registerTrainerRequestDto)).thenReturn(user);
+//    when(trainingTypeDao.findById(1L)).thenReturn(Optional.of(trainingType));
+//    when(trainerDao.save(trainer)).thenReturn(trainer);
+//    when(trainerMapper.trainerToDto(user)).thenReturn(registerTrainerResponseDto);
 //
-//import static org.junit.jupiter.api.Assertions.*;
-//import static org.mockito.Mockito.*;
+//    RegisterTrainerResponseDto response = trainerService.save(registerTrainerRequestDto);
 //
-//import java.util.List;
-//import java.util.Optional;
-//
-//import org.example.gymcrm.dao.TraineeDao;
-//import org.example.gymcrm.dao.TrainerDao;
-//import org.example.gymcrm.dao.TrainingTypeDao;
-//import org.example.gymcrm.dto.TrainerProfileDto;
-//import org.example.gymcrm.entity.Trainer;
-//import org.example.gymcrm.entity.TrainingType;
-//import org.example.gymcrm.entity.User;
-//import org.example.gymcrm.exception.AuthenticationException;
-//import org.example.gymcrm.exception.TrainerServiceException;
-//import org.example.gymcrm.service.impl.TrainerServiceImpl;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.extension.ExtendWith;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.junit.jupiter.MockitoExtension;
-//
-//@ExtendWith(MockitoExtension.class)
-//class TrainerServiceTest {
-//
-//    @Mock
-//    private TrainerDao trainerDao;
-//
-//    @Mock
-//    private TraineeDao traineeDao;
-//
-//    @Mock
-//    private TrainingTypeDao trainingTypeDao;
-//
-//    @InjectMocks
-//    private TrainerServiceImpl trainerService;
-//
-//    private Trainer trainer;
-//    private User user;
-//    private TrainingType specialization;
-//
-//    @BeforeEach
-//    void setUp() {
-//        user = new User();
-//        user.setFirstName("John");
-//        user.setLastName("Doe");
-//        user.setUsername("johndoe");
-//        user.setPassword("password");
-//        user.setActive(true);
-//
-//        specialization = new TrainingType();
-//        specialization.setName(TrainingType.Type.STRENGTH_TRAINING);
-//
-//        trainer = new Trainer();
-//        trainer.setId(1L);
-//        trainer.setUser(user);
-//        trainer.setSpecialization(specialization);
-//    }
-//
-//    @Test
-//    void testSave_NewTrainer() {
-//        when(trainingTypeDao.findByName(any())).thenReturn(Optional.of(specialization));
-//        doNothing().when(trainerDao).save(any());
-//        when(traineeDao.findUsernames()).thenReturn(List.of());
-//        when(trainerDao.findUsernames()).thenReturn(List.of());
-//
-//        trainer.setId(null);
-//        trainerService.save(trainer);
-//
-//        verify(trainerDao).save(any());
-//    }
-//
-//    @Test
-//    void testSave_ExistingTrainer() {
-//        when(trainingTypeDao.findByName(any())).thenReturn(Optional.of(specialization));
-//        doNothing().when(trainerDao).update(any());
-//
-//        trainerService.save(trainer);
-//
-//        verify(trainerDao).update(any());
-//    }
-//
-//    @Test
-//    void testUpdate_Success() {
-//        when(trainerDao.findById(anyLong())).thenReturn(Optional.of(trainer));
-//        when(trainingTypeDao.findByName(any())).thenReturn(Optional.of(specialization));
-//        doNothing().when(trainerDao).update(any());
-//
-//        Trainer updatedTrainer = new Trainer();
-//        updatedTrainer.setUser(new User());
-//        updatedTrainer.getUser().setFirstName("Jane");
-//        updatedTrainer.getUser().setLastName("Smith");
-//        updatedTrainer.getUser().setUsername("janesmith");
-//        updatedTrainer.setSpecialization(specialization);
-//
-//        trainerService.update(1L, updatedTrainer);
-//
-//        verify(trainerDao).update(any());
-//        assertEquals("Jane", trainer.getUser().getFirstName());
-//    }
-//
-//    @Test
-//    void testUpdate_TrainerNotFound() {
-//        when(trainerDao.findById(anyLong())).thenReturn(Optional.empty());
-//
-//        Trainer updatedTrainer = new Trainer();
-//        assertThrows(TrainerServiceException.class, () -> trainerService.update(1L, updatedTrainer));
-//    }
-//
-//    @Test
-//    void testFindByUsername_Success() {
-//        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.of(trainer));
-//
-//        TrainerProfileDto result = trainerService.findByUsername("johndoe");
-//
-//        assertNotNull(result);
-//        assertEquals("John", result.getFirstName());
-//    }
-//
-//    @Test
-//    void testFindByUsername_NotFound() {
-//        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.empty());
-//
-//        assertThrows(TrainerServiceException.class, () -> trainerService.findByUsername("unknown"));
-//    }
-//
-//    @Test
-//    void testChangePassword_Success() {
-//        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.of(trainer));
-//
-//        trainerService.changePassword("password", "newpassword", "johndoe");
-//
-//        assertEquals("newpassword", trainer.getUser().getPassword());
-//    }
-//
-//    @Test
-//    void testChangePassword_InvalidOldPassword() {
-//        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.of(trainer));
-//
-//        assertThrows(TrainerServiceException.class, () -> trainerService.changePassword("wrong", "newpassword", "johndoe"));
-//    }
-//
-//    @Test
-//    void testChangeStatus_Success() {
-//        when(trainerDao.findById(anyLong())).thenReturn(Optional.of(trainer));
-//
-//        trainerService.changeStatus(1L);
-//
-//        assertFalse(trainer.getUser().isActive());
-//    }
-//
-//    @Test
-//    void testGetUnassignedTrainers_Success() {
-//        when(trainerDao.findUnassignedTrainersByTraineeUsername(anyString())).thenReturn(List.of(trainer));
-//
-//        List<Trainer> trainers = trainerService.getUnassignedTrainers("johndoe");
-//
-//        assertEquals(1, trainers.size());
-//    }
-//
-//    @Test
-//    void testGetUnassignedTrainers_EmptyList() {
-//        when(trainerDao.findUnassignedTrainersByTraineeUsername(anyString())).thenReturn(List.of());
-//
-//        assertThrows(TrainerServiceException.class, () -> trainerService.getUnassignedTrainers("johndoe"));
-//    }
-//
-//    @Test
-//    void testAuthenticate_Success() {
-//        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.of(trainer));
-//
-//        assertTrue(trainerService.authenticate("johndoe", "password"));
-//    }
-//
-//    @Test
-//    void testAuthenticate_InvalidCredentials() {
-//        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.of(trainer));
-//
-//        assertThrows(AuthenticationException.class, () -> trainerService.authenticate("johndoe", "wrong"));
-//    }
-//}
+//    assertNotNull(response);
+//    assertEquals("john.doe", response.getUsername());
+//    verify(trainerDao, times(1)).save(trainer);
+//  }
+
+  @Test
+  void testSave_SpecializationNotFound() {
+    when(trainerMapper.registerDtoToUser(registerTrainerRequestDto)).thenReturn(user);
+    when(trainingTypeDao.findById(1L)).thenReturn(Optional.empty());
+
+    assertThrows(
+        TrainerServiceException.class, () -> trainerService.save(registerTrainerRequestDto));
+  }
+
+  @Test
+  void testUpdate() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
+    when(trainerDao.update(trainer)).thenReturn(trainer);
+    when(trainerMapper.toProfileDto(trainer)).thenReturn(trainerProfileDto);
+
+    TrainerProfileDto response = trainerService.update("john.doe", updateTrainerRequestDto);
+
+    assertNotNull(response);
+    assertEquals("john.doe", response.getUsername());
+    verify(trainerDao, times(1)).update(trainer);
+  }
+
+  @Test
+  void testUpdate_TrainerNotFound() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
+
+    assertThrows(
+        TrainerServiceException.class,
+        () -> trainerService.update("john.doe", updateTrainerRequestDto));
+  }
+
+  @Test
+  void testFindByUsername() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
+    when(trainerMapper.toProfileDto(trainer)).thenReturn(trainerProfileDto);
+
+    TrainerProfileDto response = trainerService.findByUsername("john.doe");
+
+    assertNotNull(response);
+    assertEquals("john.doe", response.getUsername());
+  }
+
+  @Test
+  void testFindByUsername_TrainerNotFound() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
+
+    assertThrows(TrainerServiceException.class, () -> trainerService.findByUsername("john.doe"));
+  }
+
+  @Test
+  void testChangeStatus() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
+
+    trainerService.changeStatus("john.doe");
+
+    assertFalse(trainer.getUser().isActive());
+    verify(trainerDao, times(1)).findByUsername("john.doe");
+  }
+
+  @Test
+  void testChangeStatus_TrainerNotFound() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
+
+    assertThrows(TrainerServiceException.class, () -> trainerService.changeStatus("john.doe"));
+  }
+
+  @Test
+  void testGetUnassignedTrainers() {
+    when(traineeDao.findByUsername("trainee.username"))
+        .thenReturn(Optional.of(new org.example.gymcrm.entity.Trainee()));
+    when(trainerDao.findUnassignedTrainersByTraineeUsername("trainee.username"))
+        .thenReturn(Collections.singletonList(trainer));
+    when(trainerMapper.toProfileDtoForUnassigned(trainer)).thenReturn(trainerProfileDto);
+
+    List<TrainerProfileDto> response = trainerService.getUnassignedTrainers("trainee.username");
+
+    assertNotNull(response);
+    assertEquals(1, response.size());
+    assertEquals("john.doe", response.get(0).getUsername());
+  }
+
+  @Test
+  void testGetUnassignedTrainers_TraineeNotFound() {
+    when(traineeDao.findByUsername("trainee.username")).thenReturn(Optional.empty());
+
+    assertThrows(
+        TrainerServiceException.class,
+        () -> trainerService.getUnassignedTrainers("trainee.username"));
+  }
+}

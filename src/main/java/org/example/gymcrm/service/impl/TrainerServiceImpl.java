@@ -3,7 +3,6 @@ package org.example.gymcrm.service.impl;
 import static org.example.gymcrm.util.ProfileUtils.*;
 
 import java.util.List;
-import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
@@ -13,7 +12,6 @@ import org.example.gymcrm.dto.*;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.entity.User;
-import org.example.gymcrm.exception.AuthenticationException;
 import org.example.gymcrm.exception.TrainerServiceException;
 import org.example.gymcrm.mapper.TrainerMapper;
 import org.example.gymcrm.service.TrainerService;
