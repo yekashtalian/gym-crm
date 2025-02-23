@@ -4,6 +4,7 @@ import static jakarta.persistence.GenerationType.*;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -20,11 +21,19 @@ public class User {
 
   @NotNull(message = "User first name cannot be null")
   @Size(min = 2, max = 30, message = "User first name should be from 2 to 30 symbols")
+  @Pattern(
+          regexp = "^[A-Za-z-' ]+$",
+          message =
+                  "Invalid format. Only English letters, spaces, hyphens (-), and apostrophes (') are allowed.")
   @Column(nullable = false)
   private String firstName;
 
   @NotNull(message = "User last name cannot be null")
   @Size(min = 2, max = 35, message = "User last name size should be from 2 to 35 symbols")
+  @Pattern(
+          regexp = "^[A-Za-z-' ]+$",
+          message =
+                  "Invalid format. Only English letters, spaces, hyphens (-), and apostrophes (') are allowed.")
   @Column(nullable = false)
   private String lastName;
 

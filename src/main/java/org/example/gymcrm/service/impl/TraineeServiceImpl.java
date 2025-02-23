@@ -2,6 +2,8 @@ package org.example.gymcrm.service.impl;
 
 import static org.example.gymcrm.util.ProfileUtils.*;
 
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
@@ -12,18 +14,13 @@ import org.example.gymcrm.dto.UpdateTraineeRequestDto;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.User;
-import org.example.gymcrm.exception.AuthenticationException;
 import org.example.gymcrm.exception.TraineeServiceException;
-import org.example.gymcrm.exception.TrainerServiceException;
 import org.example.gymcrm.mapper.TraineeMapper;
 import org.example.gymcrm.service.TraineeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

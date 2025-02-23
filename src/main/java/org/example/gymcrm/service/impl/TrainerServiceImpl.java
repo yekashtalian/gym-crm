@@ -97,7 +97,7 @@ public class TrainerServiceImpl implements TrainerService {
   private void updateUserFields(UpdateTrainerRequestDto trainer, User user) {
     user.setFirstName(trainer.getFirstName());
     user.setLastName(trainer.getLastName());
-    user.setActive(trainer.isActive());
+    user.setActive(trainer.getActive());
   }
 
   @Transactional(readOnly = true)
