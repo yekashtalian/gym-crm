@@ -124,7 +124,7 @@ public class UserController {
         content = @Content(mediaType = "application/json")),
     @ApiResponse(
         responseCode = "401",
-        description = "Unauthorized access",
+        description = "Missing authentication headers response",
         content =
             @Content(
                 mediaType = "application/json",
@@ -132,11 +132,26 @@ public class UserController {
                     @ExampleObject(
                         value =
                             """
-                        {
-                            "localDateTime": "2024-08-05T16:16:53.8490207",
-                            "errorMessage": "Unauthorized access"
-                        }
-                        """))),
+                                          {
+                                          "localDateTime": "2024-08-05T16:16:53.8490207",
+                                          "errorMessage": "Missing authentication headers"
+                                          }
+                                          """))),
+    @ApiResponse(
+        responseCode = "401",
+        description = "Invalid username or password headers",
+        content =
+            @Content(
+                mediaType = "application/json",
+                examples =
+                    @ExampleObject(
+                        value =
+                            """
+                                           {
+                                           "localDateTime": "2024-08-05T16:16:53.8490207",
+                                           "errorMessage": "Invalid credentials"
+                                           }
+                                           """))),
     @ApiResponse(
         responseCode = "400",
         description = "Invalid request body",
