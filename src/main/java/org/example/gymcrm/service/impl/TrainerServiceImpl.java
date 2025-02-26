@@ -12,6 +12,7 @@ import org.example.gymcrm.dto.*;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.entity.User;
+import org.example.gymcrm.exception.NotFoundException;
 import org.example.gymcrm.exception.TrainerServiceException;
 import org.example.gymcrm.mapper.TrainerMapper;
 import org.example.gymcrm.service.TrainerService;
@@ -109,10 +110,7 @@ public class TrainerServiceImpl implements TrainerService {
   @Transactional(readOnly = true)
   @Override
   public TrainerProfileDto findByUsername(String username) {
-    var trainer =
-        trainerDao
-            .findByUsername(username)
-            .orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
+    var trainer = getTrainerByUsername(username);
 
     var trainerProfile = trainerMapper.toProfileDto(trainer);
     setTraineesToTrainerProfile(trainer, trainerProfile);
@@ -130,7 +128,7 @@ public class TrainerServiceImpl implements TrainerService {
   private Trainer getTrainerByUsername(String username) {
     return trainerDao
         .findByUsername(username)
-        .orElseThrow(() -> new TrainerServiceException(TRAINER_NOT_FOUND));
+        .orElseThrow(() -> new NotFoundException(TRAINER_NOT_FOUND));
   }
 
   @Transactional
@@ -148,7 +146,7 @@ public class TrainerServiceImpl implements TrainerService {
   public List<TrainerProfileDto> getUnassignedTrainers(String username) {
     traineeDao
         .findByUsername(username)
-        .orElseThrow(() -> new TrainerServiceException("Trainee with such username doesn't exist"));
+        .orElseThrow(() -> new NotFoundException("Trainee with such username doesn't exist"));
     var trainers = trainerDao.findUnassignedTrainersByTraineeUsername(username);
 
     var trainersProfiles = trainers.stream().map(trainerMapper::toProfileDtoForUnassigned).toList();

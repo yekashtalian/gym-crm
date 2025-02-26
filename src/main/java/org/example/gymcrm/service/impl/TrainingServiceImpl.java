@@ -15,6 +15,7 @@ import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.TrainingType;
+import org.example.gymcrm.exception.NotFoundException;
 import org.example.gymcrm.exception.TrainingServiceException;
 import org.example.gymcrm.mapper.TrainingMapper;
 import org.example.gymcrm.service.TrainingService;
@@ -57,13 +58,13 @@ public class TrainingServiceImpl implements TrainingService {
   private Trainer getTrainerByUsername(String username) {
     return trainerDao
         .findByUsername(username)
-        .orElseThrow(() -> new TrainingServiceException("Trainer not found"));
+        .orElseThrow(() -> new NotFoundException("Trainer not found"));
   }
 
   private Trainee getTraineeByUsername(String username) {
     return traineeDao
         .findByUsername(username)
-        .orElseThrow(() -> new TrainingServiceException("Trainee not found"));
+        .orElseThrow(() -> new NotFoundException("Trainee not found"));
   }
 
   //  private void assignSpecialization(Training training) {
@@ -98,8 +99,8 @@ public class TrainingServiceImpl implements TrainingService {
     if (trainingTypeName != null && !trainingTypeName.isBlank()) {
       trainingType =
           trainingTypeDao
-              .findByName(TrainingType.Type.valueOf(trainingTypeName))
-              .orElseThrow(() -> new TrainingServiceException("Training type not found"));
+              .findByName(TrainingType.Type.valueOf(trainingTypeName.toUpperCase()))
+              .orElseThrow(() -> new NotFoundException("Training type not found"));
     }
     return trainingType;
   }

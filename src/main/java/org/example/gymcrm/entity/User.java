@@ -12,6 +12,7 @@ import lombok.*;
 @Table(name = "users")
 @Getter
 @Setter
+@EqualsAndHashCode(of = "username")
 @ToString
 @NoArgsConstructor
 public class User {
@@ -22,18 +23,18 @@ public class User {
   @NotNull(message = "User first name cannot be null")
   @Size(min = 2, max = 30, message = "User first name should be from 2 to 30 symbols")
   @Pattern(
-          regexp = "^[A-Za-z-' ]+$",
-          message =
-                  "Invalid format. Only English letters, spaces, hyphens (-), and apostrophes (') are allowed.")
+      regexp = "^[A-Za-z-' ]+$",
+      message =
+          "Invalid format. Only English letters, spaces, hyphens (-), and apostrophes (') are allowed.")
   @Column(nullable = false)
   private String firstName;
 
   @NotNull(message = "User last name cannot be null")
   @Size(min = 2, max = 35, message = "User last name size should be from 2 to 35 symbols")
   @Pattern(
-          regexp = "^[A-Za-z-' ]+$",
-          message =
-                  "Invalid format. Only English letters, spaces, hyphens (-), and apostrophes (') are allowed.")
+      regexp = "^[A-Za-z-' ]+$",
+      message =
+          "Invalid format. Only English letters, spaces, hyphens (-), and apostrophes (') are allowed.")
   @Column(nullable = false)
   private String lastName;
 
@@ -50,7 +51,8 @@ public class User {
     this.lastName = lastName;
   }
 
-  public User(String firstName, String lastName, String username, String password, boolean isActive) {
+  public User(
+      String firstName, String lastName, String username, String password, boolean isActive) {
     this.firstName = firstName;
     this.lastName = lastName;
     this.username = username;

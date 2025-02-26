@@ -2,7 +2,10 @@ package org.example.gymcrm.entity;
 
 import jakarta.persistence.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import lombok.*;
 
 @Entity
@@ -28,7 +31,7 @@ public class Trainer {
   private User user;
 
   @ManyToMany(mappedBy = "trainers")
-  private List<Trainee> trainees = new ArrayList<>();
+  private Set<Trainee> trainees = new HashSet<>();
 
   public void addTraining(Training training) {
     training.setTrainer(this);

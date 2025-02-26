@@ -1,9 +1,9 @@
 package org.example.gymcrm.entity;
 
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+
+import java.util.*;
+
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -34,7 +34,7 @@ public class Trainee {
       name = "trainees_trainers",
       joinColumns = @JoinColumn(name = "trainee_id"),
       inverseJoinColumns = @JoinColumn(name = "trainer_id"))
-  private List<Trainer> trainers = new ArrayList<>();
+  private Set<Trainer> trainers = new HashSet<>();
 
   @OneToOne(optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
   @MapsId
@@ -52,5 +52,9 @@ public class Trainee {
 
   public void removeTrainer(Trainer trainer) {
     trainers.remove(trainer);
+  }
+
+  public void clearTrainers() {
+    trainers.clear();
   }
 }

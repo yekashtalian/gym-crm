@@ -31,18 +31,21 @@ public class TrainerDaoImpl implements TrainerDao {
   @Override
   public Optional<Trainer> findByUsername(String username) {
     try {
-      var trainer =
-          entityManager
+      var trainer = entityManager
               .createQuery(
-                  "select tr from Trainer tr join fetch tr.user u where u.username = :username",
-                  Trainer.class)
+                      "SELECT tr FROM Trainer tr JOIN FETCH tr.user u WHERE u.username = :username",
+                      Trainer.class)
               .setParameter("username", username)
               .getSingleResult();
+
+      System.out.println("Trainer found: " + trainer.getUser().getUsername());
       return Optional.of(trainer);
     } catch (NoResultException e) {
+      System.out.println("Trainer NOT found for username: " + username);
       return Optional.empty();
     }
   }
+
 
   @Override
   public Optional<Trainer> findById(Long id) {

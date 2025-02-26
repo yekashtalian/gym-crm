@@ -2,24 +2,27 @@ package org.example.gymcrm.service.impl;
 
 import static org.example.gymcrm.util.ProfileUtils.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
-import org.example.gymcrm.dto.RegisterTraineeRequestDto;
-import org.example.gymcrm.dto.RegisterTraineeResponseDto;
-import org.example.gymcrm.dto.TraineeProfileDto;
-import org.example.gymcrm.dto.UpdateTraineeRequestDto;
+import org.example.gymcrm.dto.*;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.User;
+import org.example.gymcrm.exception.NotFoundException;
 import org.example.gymcrm.exception.TraineeServiceException;
 import org.example.gymcrm.mapper.TraineeMapper;
 import org.example.gymcrm.service.TraineeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -115,10 +118,7 @@ public class TraineeServiceImpl implements TraineeService {
   @Transactional(readOnly = true)
   @Override
   public TraineeProfileDto findByUsername(String username) {
-    var trainee =
-        traineeDao
-            .findByUsername(username)
-            .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
+    var trainee = getTraineeByUsername(username);
 
     var traineeProfile = createTraineeProfile(trainee);
 
@@ -167,15 +167,47 @@ public class TraineeServiceImpl implements TraineeService {
     }
   }
 
+  @Transactional
+  @Override
+  public List<TraineeTrainersDto> updateTraineeTrainers(
+          String username, UpdateTrainersDto updateTrainersDto) {
+    Trainee existingTrainee = getTraineeByUsername(username);
+    Set<Trainer> trainers = extractTrainers(updateTrainersDto.getTrainers());
+
+    existingTrainee.setTrainers(trainers);
+    traineeDao.update(existingTrainee);
+
+    return trainers.stream()
+                   .map(traineeMapper::toTraineeTrainersDto)
+                   .collect(Collectors.toList());
+  }
+
+  private Set<Trainer> extractTrainers(List<String> trainersUsernames) {
+    if (trainersUsernames == null || trainersUsernames.isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    return trainersUsernames.stream()
+                            .map(this::findTrainerByUsername)
+                            .collect(Collectors.toSet());
+  }
+
+  private Trainer findTrainerByUsername(String username) {
+    String cleanUsername = username.replaceAll("[\\[\\]\"]", "");
+    return trainerDao.findByUsername(cleanUsername)
+                     .orElseThrow(() -> new TraineeServiceException("Trainer not found"));
+  }
+
+
   private Trainer getTrainerByUsername(String trainerUsername) {
     return trainerDao
         .findByUsername(trainerUsername)
-        .orElseThrow(() -> new TraineeServiceException("This trainer doesn't exist"));
+        .orElseThrow(() -> new NotFoundException("This trainer doesn't exist"));
   }
 
   private Trainee getTraineeByUsername(String traineeUsername) {
     return traineeDao
         .findByUsername(traineeUsername)
-        .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
+        .orElseThrow(() -> new NotFoundException(TRAINEE_NOT_FOUND));
   }
 }

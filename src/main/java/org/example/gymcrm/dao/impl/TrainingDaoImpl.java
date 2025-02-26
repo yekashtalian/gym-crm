@@ -5,10 +5,11 @@ import jakarta.persistence.PersistenceContext;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import jakarta.persistence.TemporalType;
 import org.example.gymcrm.dao.TrainingDao;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.TrainingType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -36,34 +37,47 @@ public class TrainingDaoImpl implements TrainingDao {
   @Override
   public List<Training> getTrainingsByTraineeUsername(
       String username, Date fromDate, Date toDate, String trainerName, TrainingType trainingType) {
-    var trainings =
+
+    StringBuilder jpql =
+        new StringBuilder(
+            """
+        SELECT t FROM Training t
+        JOIN t.trainee trainee
+        WHERE trainee.user.username = :username
+        """);
+
+    if (fromDate != null) {
+      jpql.append(" AND t.date >= :fromDate");
+    }
+    if (toDate != null) {
+      jpql.append(" AND t.date <= :toDate");
+    }
+    if (trainerName != null) {
+      jpql.append(" AND t.trainer.user.firstName = :trainerName");
+    }
+    if (trainingType != null) {
+      jpql.append(" AND t.type = :trainingType");
+    }
+
+    var query =
         entityManager
-            .createQuery(
-                """
-                        SELECT t FROM Training t
-                        JOIN t.trainee trainee
-                        WHERE trainee.user.username = :username
-                        AND (
-                        :fromDate IS NULL OR t.date >= :fromDate
-                        )
-                        AND (
-                        :toDate IS NULL OR t.date <= :toDate
-                        )
-                        AND (
-                        :trainerName IS NULL OR t.trainer.user.firstName = :trainerName
-                        )
-                        AND (
-                        :trainingType IS NULL OR t.type = :trainingType
-                        )
-                                                                         """,
-                Training.class)
-            .setParameter("username", username)
-            .setParameter("fromDate", fromDate)
-            .setParameter("toDate", toDate)
-            .setParameter("trainerName", trainerName)
-            .setParameter("trainingType", trainingType)
-            .getResultList();
-    return trainings;
+            .createQuery(jpql.toString(), Training.class)
+            .setParameter("username", username);
+
+    if (fromDate != null) {
+      query.setParameter("fromDate", fromDate, TemporalType.DATE);
+    }
+    if (toDate != null) {
+      query.setParameter("toDate", toDate, TemporalType.DATE);
+    }
+    if (trainerName != null) {
+      query.setParameter("trainerName", trainerName);
+    }
+    if (trainingType != null) {
+      query.setParameter("trainingType", trainingType);
+    }
+
+    return query.getResultList();
   }
 
   @Override

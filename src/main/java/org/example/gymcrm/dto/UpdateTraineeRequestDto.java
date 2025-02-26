@@ -2,7 +2,6 @@ package org.example.gymcrm.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -17,9 +16,6 @@ import java.util.Date;
 @AllArgsConstructor
 @Builder
 public class UpdateTraineeRequestDto {
-  @NotEmpty(message = "Trainee username cannot be empty")
-  private String username;
-
   @NotEmpty(message = "Trainee first name cannot be empty")
   @Size(min = 2, max = 30, message = "Trainee first name should be from 2 to 30 symbols")
   @Pattern(

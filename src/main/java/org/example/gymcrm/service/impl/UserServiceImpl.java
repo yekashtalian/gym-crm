@@ -2,6 +2,7 @@ package org.example.gymcrm.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.UserDao;
+import org.example.gymcrm.exception.NotFoundException;
 import org.example.gymcrm.exception.UserServiceException;
 import org.example.gymcrm.service.UserService;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ public class UserServiceImpl implements UserService {
     var existingUser =
         userDao
             .findByUsername(username)
-            .orElseThrow(() -> new UserServiceException("This user doesn't exist"));
+            .orElseThrow(() -> new NotFoundException("This user doesn't exist"));
 
     if (!existingUser.getPassword().equals(oldPassword)) {
       throw new UserServiceException("Invalid old password");
