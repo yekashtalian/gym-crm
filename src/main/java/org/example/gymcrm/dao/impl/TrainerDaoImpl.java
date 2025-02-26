@@ -78,15 +78,4 @@ public class TrainerDaoImpl implements TrainerDao {
             .getResultList();
     return trainers;
   }
-
-  @Override
-  public List<Trainer> findAll() {
-    var trainers =
-        entityManager
-            .createQuery(
-                "select tr from Trainer tr join fetch tr.user join fetch tr.specialization",
-                Trainer.class)
-            .getResultList();
-    return trainers;
-  }
 }

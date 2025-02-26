@@ -12,8 +12,6 @@ public interface TraineeService {
 
   void deleteByUsername(String username);
 
-  List<TraineeProfileDto> findAll();
-
   TraineeProfileDto findByUsername(String username);
 
   void changeStatus(String username);

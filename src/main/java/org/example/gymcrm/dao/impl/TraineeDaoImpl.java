@@ -67,13 +67,4 @@ public class TraineeDaoImpl implements TraineeDao {
   public Trainee update(Trainee trainee) {
     return entityManager.merge(trainee);
   }
-
-  @Override
-  public List<Trainee> findAll() {
-    var trainees =
-        entityManager
-            .createQuery("select tr from Trainee tr join fetch tr.user", Trainee.class)
-            .getResultList();
-    return trainees;
-  }
 }

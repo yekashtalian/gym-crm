@@ -16,6 +16,4 @@ public interface TraineeDao {
   Optional<Trainee> findById(Long id);
 
   Trainee update(Trainee trainee);
-
-  List<Trainee> findAll();
 }

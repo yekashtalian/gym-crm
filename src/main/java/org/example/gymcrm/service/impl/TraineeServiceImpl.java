@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
@@ -22,7 +21,6 @@ import org.example.gymcrm.service.TraineeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -111,12 +109,6 @@ public class TraineeServiceImpl implements TraineeService {
 
   @Transactional(readOnly = true)
   @Override
-  public List<TraineeProfileDto> findAll() {
-    return null;
-  }
-
-  @Transactional(readOnly = true)
-  @Override
   public TraineeProfileDto findByUsername(String username) {
     var trainee = getTraineeByUsername(username);
 
@@ -170,16 +162,14 @@ public class TraineeServiceImpl implements TraineeService {
   @Transactional
   @Override
   public List<TraineeTrainersDto> updateTraineeTrainers(
-          String username, UpdateTrainersDto updateTrainersDto) {
+      String username, UpdateTrainersDto updateTrainersDto) {
     Trainee existingTrainee = getTraineeByUsername(username);
     Set<Trainer> trainers = extractTrainers(updateTrainersDto.getTrainers());
 
     existingTrainee.setTrainers(trainers);
     traineeDao.update(existingTrainee);
 
-    return trainers.stream()
-                   .map(traineeMapper::toTraineeTrainersDto)
-                   .collect(Collectors.toList());
+    return trainers.stream().map(traineeMapper::toTraineeTrainersDto).collect(Collectors.toList());
   }
 
   private Set<Trainer> extractTrainers(List<String> trainersUsernames) {
@@ -187,17 +177,15 @@ public class TraineeServiceImpl implements TraineeService {
       return Collections.emptySet();
     }
 
-    return trainersUsernames.stream()
-                            .map(this::findTrainerByUsername)
-                            .collect(Collectors.toSet());
+    return trainersUsernames.stream().map(this::findTrainerByUsername).collect(Collectors.toSet());
   }
 
   private Trainer findTrainerByUsername(String username) {
     String cleanUsername = username.replaceAll("[\\[\\]\"]", "");
-    return trainerDao.findByUsername(cleanUsername)
-                     .orElseThrow(() -> new TraineeServiceException("Trainer not found"));
+    return trainerDao
+        .findByUsername(cleanUsername)
+        .orElseThrow(() -> new TraineeServiceException("Trainer not found"));
   }
-
 
   private Trainer getTrainerByUsername(String trainerUsername) {
     return trainerDao

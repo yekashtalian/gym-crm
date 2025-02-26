@@ -83,23 +83,40 @@ public class TrainingDaoImpl implements TrainingDao {
   @Override
   public List<Training> getTrainingsByTrainerUsername(
       String username, Date fromDate, Date toDate, String traineeName) {
-    var trainings =
+
+    StringBuilder jpql =
+        new StringBuilder(
+            """
+                    SELECT t FROM Training t
+                    JOIN t.trainer trainer
+                    WHERE trainer.user.username = :username
+                    """);
+
+    if (fromDate != null) {
+      jpql.append(" AND t.date >= :fromDate");
+    }
+    if (toDate != null) {
+      jpql.append(" AND t.date <= :toDate");
+    }
+    if (traineeName != null) {
+      jpql.append(" AND t.trainee.user.firstName = :traineeName");
+    }
+
+    var query =
         entityManager
-            .createQuery(
-                """
-                        SELECT t FROM Training t
-                        JOIN FETCH t.trainer trainer
-                        WHERE trainer.user.username = :username
-                        AND (:fromDate IS NULL OR t.date >= :fromDate)
-                        AND (:toDate IS NULL OR t.date <= :toDate)
-                        AND (:traineeName IS NULL OR trainer.user.firstName = :traineeName)
-                        """,
-                Training.class)
-            .setParameter("username", username)
-            .setParameter("fromDate", fromDate)
-            .setParameter("toDate", toDate)
-            .setParameter("traineeName", traineeName)
-            .getResultList();
-    return trainings;
+            .createQuery(jpql.toString(), Training.class)
+            .setParameter("username", username);
+
+    if (fromDate != null) {
+      query.setParameter("fromDate", fromDate, TemporalType.DATE);
+    }
+    if (toDate != null) {
+      query.setParameter("toDate", toDate, TemporalType.DATE);
+    }
+    if (traineeName != null) {
+      query.setParameter("traineeName", traineeName);
+    }
+
+    return query.getResultList();
   }
 }

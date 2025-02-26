@@ -508,4 +508,71 @@ public class TraineeController {
     var traineeTrainers = traineeService.updateTraineeTrainers(username, updateTrainersDto);
     return ResponseEntity.ok(traineeTrainers);
   }
+
+  @Operation(
+      summary = "Change trainee's active status",
+      description = "Toggle the active status of a trainee",
+      parameters = {
+        @Parameter(
+            name = "Username",
+            description = "Trainer's username for authentication",
+            example = "john.doe",
+            in = ParameterIn.HEADER,
+            required = true),
+        @Parameter(
+            name = "Password",
+            description = "Trainer's password for authentication",
+            example = "password123",
+            in = ParameterIn.HEADER,
+            required = true),
+        @Parameter(
+            name = "username",
+            description = "Username of the trainer to change status",
+            example = "john.doe",
+            in = ParameterIn.PATH,
+            required = true)
+      })
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Successfully changed trainee's status"),
+    @ApiResponse(
+        responseCode = "401",
+        description = "Missing authentication headers response",
+        content =
+            @Content(
+                mediaType = "application/json",
+                examples =
+                    @ExampleObject(
+                        value =
+                            """
+                                                          {
+                                                          "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                          "errorMessage": "Missing authentication headers"
+                                                          }
+                                                          """))),
+    @ApiResponse(
+        responseCode = "401",
+        description = "Invalid username or password headers",
+        content =
+            @Content(
+                mediaType = "application/json",
+                examples =
+                    @ExampleObject(
+                        value =
+                            """
+                                                           {
+                                                           "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                           "errorMessage": "Invalid credentials"
+                                                           }
+                                                           """))),
+    @ApiResponse(
+        responseCode = "404",
+        description = "Trainer not found",
+        content = @Content(mediaType = "application/json"))
+  })
+  @RequiresAuthentication
+  @PatchMapping("/trainee/{username}/status")
+  public ResponseEntity<Void> changeStatus(@PathVariable("username") String username) {
+    traineeService.changeStatus(username);
+    return ResponseEntity.ok().build();
+  }
 }

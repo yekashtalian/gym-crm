@@ -2,7 +2,6 @@ package org.example.gymcrm.service.impl;
 
 import java.util.Date;
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
@@ -13,10 +12,8 @@ import org.example.gymcrm.dto.TrainerTrainingDto;
 import org.example.gymcrm.dto.TrainingDto;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
-import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.exception.NotFoundException;
-import org.example.gymcrm.exception.TrainingServiceException;
 import org.example.gymcrm.mapper.TrainingMapper;
 import org.example.gymcrm.service.TrainingService;
 import org.slf4j.Logger;
@@ -66,15 +63,6 @@ public class TrainingServiceImpl implements TrainingService {
         .findByUsername(username)
         .orElseThrow(() -> new NotFoundException("Trainee not found"));
   }
-
-  //  private void assignSpecialization(Training training) {
-  //    logger.info("Assigning specialization for training");
-  //    var trainingType =
-  //        trainingTypeDao
-  //            .findByName(training.getType().getName())
-  //            .orElseThrow(() -> new TrainingServiceException("Training type not found"));
-  //    training.setType(trainingType);
-  //  }
 
   @Transactional(readOnly = true)
   @Override

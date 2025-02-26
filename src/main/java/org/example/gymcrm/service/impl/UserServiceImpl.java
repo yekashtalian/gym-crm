@@ -5,8 +5,6 @@ import org.example.gymcrm.dao.UserDao;
 import org.example.gymcrm.exception.NotFoundException;
 import org.example.gymcrm.exception.UserServiceException;
 import org.example.gymcrm.service.UserService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

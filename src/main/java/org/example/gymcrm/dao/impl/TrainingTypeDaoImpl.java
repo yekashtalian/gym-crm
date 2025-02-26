@@ -3,7 +3,6 @@ package org.example.gymcrm.dao.impl;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
-
 import java.util.List;
 import java.util.Optional;
 import org.example.gymcrm.dao.TrainingTypeDao;

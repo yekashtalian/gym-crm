@@ -13,8 +13,6 @@ public interface TrainerService {
 
   TrainerProfileDto update(String username, UpdateTrainerRequestDto trainer);
 
-  List<TrainerProfileDto> getAll();
-
   TrainerProfileDto findByUsername(String username);
 
   void changeStatus(String username);

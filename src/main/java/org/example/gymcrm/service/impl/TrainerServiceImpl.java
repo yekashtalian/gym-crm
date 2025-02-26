@@ -3,7 +3,6 @@ package org.example.gymcrm.service.impl;
 import static org.example.gymcrm.util.ProfileUtils.*;
 
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
@@ -99,12 +98,6 @@ public class TrainerServiceImpl implements TrainerService {
     user.setFirstName(trainer.getFirstName());
     user.setLastName(trainer.getLastName());
     user.setActive(trainer.getActive());
-  }
-
-  @Transactional(readOnly = true)
-  @Override
-  public List<TrainerProfileDto> getAll() {
-    return null;
   }
 
   @Transactional(readOnly = true)
