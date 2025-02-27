@@ -83,34 +83,29 @@ public class TrainerController {
         content =
             @Content(
                 mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                          {
-                                          "localDateTime": "2024-08-05T16:16:53.8490207",
-                                          "errorMessage": "Missing authentication headers"
-                                          }
-                                          """))),
-    @ApiResponse(
-        responseCode = "401",
-        description = "Invalid username or password headers",
-        content =
-            @Content(
-                mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                           {
-                                           "localDateTime": "2024-08-05T16:16:53.8490207",
-                                           "errorMessage": "Invalid credentials"
-                                           }
-                                           """))),
-    @ApiResponse(
-        responseCode = "404",
-        description = "Trainer not found",
-        content = @Content(mediaType = "application/json"))
+                examples = {
+                  @ExampleObject(
+                      name = "Missing headers",
+                      description = "Missing authentication headers",
+                      value =
+                          """
+                                                                  {
+                                                                  "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                  "errorMessage": "Missing authentication headers"
+                                                                  }
+                                                                  """),
+                  @ExampleObject(
+                      name = "Invalid headers",
+                      description = "Invalid user credentials",
+                      value =
+                          """
+                                                                           {
+                                                                           "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                           "errorMessage": "Invalid credentials"
+                                                                           }
+                                                                           """)
+                })),
+    @ApiResponse(responseCode = "404", description = "Trainer not found", content = @Content())
   })
   public ResponseEntity<TrainerProfileDto> getTrainer(@PathVariable("username") String username) {
     var trainerProfile = trainerService.findByUsername(username);
@@ -271,34 +266,29 @@ public class TrainerController {
         content =
             @Content(
                 mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                          {
-                                          "localDateTime": "2024-08-05T16:16:53.8490207",
-                                          "errorMessage": "Missing authentication headers"
-                                          }
-                                          """))),
-    @ApiResponse(
-        responseCode = "401",
-        description = "Invalid username or password headers",
-        content =
-            @Content(
-                mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                           {
-                                           "localDateTime": "2024-08-05T16:16:53.8490207",
-                                           "errorMessage": "Invalid credentials"
-                                           }
-                                           """))),
-    @ApiResponse(
-        responseCode = "404",
-        description = "Trainer not found",
-        content = @Content(mediaType = "application/json"))
+                examples = {
+                  @ExampleObject(
+                      name = "Missing headers",
+                      description = "Missing authentication headers",
+                      value =
+                          """
+                                                                  {
+                                                                  "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                  "errorMessage": "Missing authentication headers"
+                                                                  }
+                                                                  """),
+                  @ExampleObject(
+                      name = "Invalid headers",
+                      description = "Invalid user credentials",
+                      value =
+                          """
+                                                                           {
+                                                                           "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                           "errorMessage": "Invalid credentials"
+                                                                           }
+                                                                           """)
+                })),
+    @ApiResponse(responseCode = "404", description = "Trainer not found", content = @Content())
   })
   public ResponseEntity<TrainerProfileDto> updateTrainer(
       @PathVariable("username") String username,
@@ -357,30 +347,28 @@ public class TrainerController {
         content =
             @Content(
                 mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                          {
-                                          "localDateTime": "2024-08-05T16:16:53.8490207",
-                                          "errorMessage": "Missing authentication headers"
-                                          }
-                                          """))),
-    @ApiResponse(
-        responseCode = "401",
-        description = "Invalid username or password headers",
-        content =
-            @Content(
-                mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                           {
-                                           "localDateTime": "2024-08-05T16:16:53.8490207",
-                                           "errorMessage": "Invalid credentials"
-                                           }
-                                           """)))
+                examples = {
+                  @ExampleObject(
+                      name = "Missing headers",
+                      description = "Missing authentication headers",
+                      value =
+                          """
+                                                                  {
+                                                                  "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                  "errorMessage": "Missing authentication headers"
+                                                                  }
+                                                                  """),
+                  @ExampleObject(
+                      name = "Invalid headers",
+                      description = "Invalid user credentials",
+                      value =
+                          """
+                                                                           {
+                                                                           "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                           "errorMessage": "Invalid credentials"
+                                                                           }
+                                                                           """)
+                }))
   })
   public ResponseEntity<List<TrainerProfileDto>> getUnassignedTrainers(
       @RequestParam("username") String username) {
@@ -460,34 +448,29 @@ public class TrainerController {
         content =
             @Content(
                 mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                          {
-                                          "localDateTime": "2024-08-05T16:16:53.8490207",
-                                          "errorMessage": "Missing authentication headers"
-                                          }
-                                          """))),
-    @ApiResponse(
-        responseCode = "401",
-        description = "Invalid username or password headers",
-        content =
-            @Content(
-                mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                           {
-                                           "localDateTime": "2024-08-05T16:16:53.8490207",
-                                           "errorMessage": "Invalid credentials"
-                                           }
-                                           """))),
-    @ApiResponse(
-        responseCode = "404",
-        description = "Trainer not found",
-        content = @Content(mediaType = "application/json"))
+                examples = {
+                  @ExampleObject(
+                      name = "Missing headers",
+                      description = "Missing authentication headers",
+                      value =
+                          """
+                                                                  {
+                                                                  "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                  "errorMessage": "Missing authentication headers"
+                                                                  }
+                                                                  """),
+                  @ExampleObject(
+                      name = "Invalid headers",
+                      description = "Invalid user credentials",
+                      value =
+                          """
+                                                                           {
+                                                                           "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                           "errorMessage": "Invalid credentials"
+                                                                           }
+                                                                           """)
+                })),
+    @ApiResponse(responseCode = "404", description = "Trainer not found", content = @Content())
   })
   public ResponseEntity<List<TrainerTrainingDto>> getTrainerTrainings(
       @PathVariable("username") String username,
@@ -533,34 +516,29 @@ public class TrainerController {
         content =
             @Content(
                 mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                          {
-                                          "localDateTime": "2024-08-05T16:16:53.8490207",
-                                          "errorMessage": "Missing authentication headers"
-                                          }
-                                          """))),
-    @ApiResponse(
-        responseCode = "401",
-        description = "Invalid username or password headers",
-        content =
-            @Content(
-                mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                           {
-                                           "localDateTime": "2024-08-05T16:16:53.8490207",
-                                           "errorMessage": "Invalid credentials"
-                                           }
-                                           """))),
-    @ApiResponse(
-        responseCode = "404",
-        description = "Trainer not found",
-        content = @Content(mediaType = "application/json"))
+                examples = {
+                  @ExampleObject(
+                      name = "Missing headers",
+                      description = "Missing authentication headers",
+                      value =
+                          """
+                                                                  {
+                                                                  "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                  "errorMessage": "Missing authentication headers"
+                                                                  }
+                                                                  """),
+                  @ExampleObject(
+                      name = "Invalid headers",
+                      description = "Invalid user credentials",
+                      value =
+                          """
+                                                                           {
+                                                                           "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                           "errorMessage": "Invalid credentials"
+                                                                           }
+                                                                           """)
+                })),
+    @ApiResponse(responseCode = "404", description = "Trainer not found", content = @Content())
   })
   public ResponseEntity<Void> changeStatus(@PathVariable("username") String username) {
     trainerService.changeStatus(username);

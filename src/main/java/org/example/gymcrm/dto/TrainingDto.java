@@ -25,7 +25,7 @@ public class TrainingDto {
   private String trainingName;
 
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-  @NotEmpty(message = "Missing training date field")
+  @NotNull(message = "Missing training date field")
   private Date trainingDate;
 
   @NotNull(message = "Training duration cannot be null")

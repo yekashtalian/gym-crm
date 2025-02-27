@@ -8,7 +8,6 @@ import org.example.gymcrm.dto.TrainerTrainingDto;
 import org.example.gymcrm.dto.TrainingDto;
 
 public interface TrainingService {
-  List<TraineeTrainingDto> getAll();
 
   void save(TrainingDto training);
 

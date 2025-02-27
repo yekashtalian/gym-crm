@@ -13,6 +13,7 @@ import org.example.gymcrm.dto.*;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.entity.User;
+import org.example.gymcrm.exception.NotFoundException;
 import org.example.gymcrm.exception.TrainerServiceException;
 import org.example.gymcrm.mapper.TrainerMapper;
 import org.example.gymcrm.service.impl.TrainerServiceImpl;
@@ -82,19 +83,27 @@ public class TrainerServiceTest {
     trainerProfileDto.setActive(true);
   }
 
-//  @Test
-//  void testSave() {
-//    when(trainerMapper.registerDtoToUser(registerTrainerRequestDto)).thenReturn(user);
-//    when(trainingTypeDao.findById(1L)).thenReturn(Optional.of(trainingType));
-//    when(trainerDao.save(trainer)).thenReturn(trainer);
-//    when(trainerMapper.trainerToDto(user)).thenReturn(registerTrainerResponseDto);
-//
-//    RegisterTrainerResponseDto response = trainerService.save(registerTrainerRequestDto);
-//
-//    assertNotNull(response);
-//    assertEquals("john.doe", response.getUsername());
-//    verify(trainerDao, times(1)).save(trainer);
-//  }
+  @Test
+  void testSave() {
+    when(trainerMapper.registerDtoToUser(registerTrainerRequestDto)).thenReturn(user);
+    when(trainingTypeDao.findById(1L)).thenReturn(Optional.of(trainingType));
+    when(traineeDao.findUsernames()).thenReturn(Collections.emptyList());
+    when(trainerDao.findUsernames()).thenReturn(Collections.emptyList());
+    when(trainerDao.save(any(Trainer.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(trainerMapper.trainerToDto(any(User.class))).thenReturn(registerTrainerResponseDto);
+
+    RegisterTrainerResponseDto response = trainerService.save(registerTrainerRequestDto);
+
+    assertNotNull(response);
+    assertEquals("john.doe", response.getUsername());
+
+    verify(trainerDao, times(1)).save(any(Trainer.class));
+    verify(trainerMapper, times(1)).trainerToDto(any(User.class));
+    verify(trainingTypeDao, times(1)).findById(1L);
+    verify(traineeDao, times(1)).findUsernames();
+    verify(trainerDao, times(1)).findUsernames();
+  }
+
 
   @Test
   void testSave_SpecializationNotFound() {
@@ -123,7 +132,7 @@ public class TrainerServiceTest {
     when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
 
     assertThrows(
-        TrainerServiceException.class,
+        NotFoundException.class,
         () -> trainerService.update("john.doe", updateTrainerRequestDto));
   }
 
@@ -142,7 +151,7 @@ public class TrainerServiceTest {
   void testFindByUsername_TrainerNotFound() {
     when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-    assertThrows(TrainerServiceException.class, () -> trainerService.findByUsername("john.doe"));
+    assertThrows(NotFoundException.class, () -> trainerService.findByUsername("john.doe"));
   }
 
   @Test
@@ -159,7 +168,7 @@ public class TrainerServiceTest {
   void testChangeStatus_TrainerNotFound() {
     when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-    assertThrows(TrainerServiceException.class, () -> trainerService.changeStatus("john.doe"));
+    assertThrows(NotFoundException.class, () -> trainerService.changeStatus("john.doe"));
   }
 
   @Test
@@ -182,7 +191,7 @@ public class TrainerServiceTest {
     when(traineeDao.findByUsername("trainee.username")).thenReturn(Optional.empty());
 
     assertThrows(
-        TrainerServiceException.class,
+        NotFoundException.class,
         () -> trainerService.getUnassignedTrainers("trainee.username"));
   }
 }

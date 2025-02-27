@@ -128,30 +128,28 @@ public class UserController {
         content =
             @Content(
                 mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                          {
-                                          "localDateTime": "2024-08-05T16:16:53.8490207",
-                                          "errorMessage": "Missing authentication headers"
-                                          }
-                                          """))),
-    @ApiResponse(
-        responseCode = "401",
-        description = "Invalid username or password headers",
-        content =
-            @Content(
-                mediaType = "application/json",
-                examples =
-                    @ExampleObject(
-                        value =
-                            """
-                                           {
-                                           "localDateTime": "2024-08-05T16:16:53.8490207",
-                                           "errorMessage": "Invalid credentials"
-                                           }
-                                           """))),
+                examples = {
+                  @ExampleObject(
+                      name = "Missing headers",
+                      description = "Missing authentication headers",
+                      value =
+                          """
+                                                                  {
+                                                                  "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                  "errorMessage": "Missing authentication headers"
+                                                                  }
+                                                                  """),
+                  @ExampleObject(
+                      name = "Invalid headers",
+                      description = "Invalid user credentials",
+                      value =
+                          """
+                                                                           {
+                                                                           "localDateTime": "2024-08-05T16:16:53.8490207",
+                                                                           "errorMessage": "Invalid credentials"
+                                                                           }
+                                                                           """)
+                })),
     @ApiResponse(
         responseCode = "400",
         description = "Invalid request body",

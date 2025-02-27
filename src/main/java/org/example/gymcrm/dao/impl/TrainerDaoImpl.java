@@ -38,10 +38,8 @@ public class TrainerDaoImpl implements TrainerDao {
               .setParameter("username", username)
               .getSingleResult();
 
-      System.out.println("Trainer found: " + trainer.getUser().getUsername());
       return Optional.of(trainer);
     } catch (NoResultException e) {
-      System.out.println("Trainer NOT found for username: " + username);
       return Optional.empty();
     }
   }

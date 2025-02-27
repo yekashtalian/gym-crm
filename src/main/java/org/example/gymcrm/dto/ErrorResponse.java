@@ -15,7 +15,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 public class ErrorResponse {
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm::ss")
   private LocalDateTime localDateTime;
 
   private String errorMessage;

@@ -1,9 +1,6 @@
 package org.example.gymcrm.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 @Getter
@@ -34,6 +31,6 @@ public class UpdateTrainerRequestDto {
 
   private Long specializationId;
 
-  @NotEmpty(message = "Active field cannot be empty")
+  @NotNull(message = "Active field cannot be empty")
   private Boolean active;
 }

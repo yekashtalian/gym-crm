@@ -3,6 +3,7 @@ package org.example.gymcrm.web.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.gymcrm.aspect.RequiresAuthentication;
 import org.example.gymcrm.dto.ChangePasswordRequest;
+import org.example.gymcrm.dto.LoginDto;
 import org.example.gymcrm.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,8 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
@@ -39,36 +39,35 @@ public class UserControllerTest {
 
   @Test
   public void login_ValidCredentials_ReturnsOk() throws Exception {
-    String username = "testUser";
-    String password = "testPassword";
+    var loginDto = new LoginDto("testUser", "testPassword");
+    var username = loginDto.getUsername();
+    var password = loginDto.getPassword();
+
+    var loginJson = objectMapper.writeValueAsString(loginDto);
 
     when(userService.validateCredentials(username, password)).thenReturn(true);
 
     mockMvc
         .perform(
-            get("/api/v1/user/login")
-                .param("username", username)
-                .param("password", password)
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().string(username + " " + password));
+            post("/api/v1/user/login").contentType(MediaType.APPLICATION_JSON).content(loginJson))
+        .andExpect(status().isOk());
 
     verify(userService, times(1)).validateCredentials(username, password);
   }
 
   @Test
   public void login_InvalidCredentials_ReturnsUnauthorized() throws Exception {
-    String username = "testUser";
-    String password = "wrongPassword";
+    var loginDto = new LoginDto("testUser", "wrongPassword");
+    var username = loginDto.getUsername();
+    var password = loginDto.getPassword();
+
+    var loginJson = objectMapper.writeValueAsString(loginDto);
 
     when(userService.validateCredentials(username, password)).thenReturn(false);
 
     mockMvc
         .perform(
-            get("/api/v1/user/login")
-                .param("username", username)
-                .param("password", password)
-                .contentType(MediaType.APPLICATION_JSON))
+            post("/api/v1/user/login").contentType(MediaType.APPLICATION_JSON).content(loginJson))
         .andExpect(status().isUnauthorized())
         .andExpect(content().string("Invalid credentials!"));
 
@@ -85,8 +84,7 @@ public class UserControllerTest {
             put("/api/v1/user/change-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(changePasswordRequest)))
-        .andExpect(status().isOk())
-        .andExpect(content().string("Successfully changed old password to: newPassword"));
+        .andExpect(status().isOk());
 
     verify(userService, times(1)).changePassword("testUser", "oldPassword", "newPassword");
   }

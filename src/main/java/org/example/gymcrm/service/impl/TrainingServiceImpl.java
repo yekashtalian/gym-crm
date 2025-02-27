@@ -31,12 +31,6 @@ public class TrainingServiceImpl implements TrainingService {
   private final TrainingTypeDao trainingTypeDao;
   private final TrainingMapper trainingMapper;
 
-  @Transactional(readOnly = true)
-  @Override
-  public List<TraineeTrainingDto> getAll() {
-    return null;
-  }
-
   @Transactional
   @Override
   public void save(TrainingDto trainingDto) {
