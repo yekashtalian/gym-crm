@@ -90,7 +90,6 @@ public class TrainerControllerTest {
     var username = "john.doe";
     var updateDto =
         UpdateTrainerRequestDto.builder()
-            .username(username)
             .firstName("John")
             .lastName("Doe")
             .specializationId(1L)

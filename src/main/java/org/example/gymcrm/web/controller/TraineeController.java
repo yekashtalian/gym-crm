@@ -374,7 +374,21 @@ public class TraineeController {
   @GetMapping("/trainee/{username}/trainings")
   @Operation(
       summary = "Get trainee's trainings",
-      description = "Fetch all training sessions of a trainee")
+      description = "Fetch all training sessions of a trainee",
+      parameters = {
+        @Parameter(
+            name = "Username",
+            description = "Trainee's username for authentication",
+            example = "yevhenii.kashtalian",
+            in = ParameterIn.HEADER,
+            required = true),
+        @Parameter(
+            name = "Password",
+            description = "Trainee's password for authentication",
+            example = "b9T(ac^ydY",
+            in = ParameterIn.HEADER,
+            required = true)
+      })
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
@@ -441,7 +455,7 @@ public class TraineeController {
           @Parameter(description = "Trainer name of the training", example = "John")
           String trainerName,
       @RequestParam(value = "trainingType", required = false)
-          @Parameter(description = "Training name", example = "HIIT")
+          @Parameter(description = "Training Type", example = "HIIT")
           String trainingType) {
     var traineeTrainings =
         trainingService.getTrainingsByTraineeUsername(
@@ -487,18 +501,7 @@ public class TraineeController {
                                   """
                 {
                     "trainers": [
-                        {
-                            "username": "trainer1",
-                            "firstName": "John",
-                            "lastName": "Doe",
-                            "specializationId": 1
-                        },
-                        {
-                            "username": "trainer2",
-                            "firstName": "Jane",
-                            "lastName": "Smith",
-                            "specializationId": 2
-                        }
+                     "john.doe"
                     ]
                 }
                 """))))
@@ -515,16 +518,10 @@ public class TraineeController {
                             """
                 [
                     {
-                        "username": "trainer1",
-                        "firstName": "John",
-                        "lastName": "Doe",
-                        "specializationId": 1
-                    },
-                    {
-                        "username": "trainer2",
-                        "firstName": "Jane",
-                        "lastName": "Smith",
-                        "specializationId": 2
+                         "username": "john.doe",
+                         "firstName": "John",
+                         "lastName": "Doe",
+                         "specializationId": 1
                     }
                 ]
                 """))),

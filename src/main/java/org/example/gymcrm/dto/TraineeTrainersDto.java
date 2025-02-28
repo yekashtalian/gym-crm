@@ -7,6 +7,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class TraineeTrainersDto {
     private String username;
     private String firstName;

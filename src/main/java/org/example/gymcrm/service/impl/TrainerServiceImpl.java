@@ -8,6 +8,7 @@ import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
 import org.example.gymcrm.dto.*;
+import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.entity.User;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TrainerServiceImpl implements TrainerService {
   private static final Logger logger = LoggerFactory.getLogger(TrainerServiceImpl.class);
   private static final String TRAINER_NOT_FOUND = "This trainer doesn't exist!";
+  private static final String TRAINEE_NOT_FOUND = "This trainee doesn't exist!";
   private final TrainerDao trainerDao;
   private final TraineeDao traineeDao;
   private final TrainingTypeDao trainingTypeDao;
@@ -33,6 +35,7 @@ public class TrainerServiceImpl implements TrainerService {
   @Transactional
   @Override
   public RegisterTrainerResponseDto save(RegisterTrainerRequestDto trainerRequestDto) {
+    logger.info("Attempting to register a new trainer");
     var user = trainerMapper.registerDtoToUser(trainerRequestDto);
     var trainer = new Trainer();
     trainer.setUser(user);
@@ -50,6 +53,7 @@ public class TrainerServiceImpl implements TrainerService {
   }
 
   private void assignGeneratedCredentials(Trainer trainer) {
+    logger.info("Assigning credentials for trainer: {}", trainer.getUser().getUsername());
     var usernames = mergeAllUsernames(traineeDao.findUsernames(), trainerDao.findUsernames());
     var user = trainer.getUser();
 
@@ -58,27 +62,26 @@ public class TrainerServiceImpl implements TrainerService {
   }
 
   private TrainingType getTrainingType(Long specializationId) {
-    var specialization =
-        trainingTypeDao
-            .findById(specializationId)
-            .orElseThrow(() -> new TrainerServiceException("Specialization not found"));
-    return specialization;
+    logger.info("Fetching specialization by ID: {}", specializationId);
+    return trainingTypeDao
+        .findById(specializationId)
+        .orElseThrow(() -> new TrainerServiceException("Specialization not found"));
   }
 
   @Transactional
   @Override
   public TrainerProfileDto update(String username, UpdateTrainerRequestDto trainer) {
+    logger.info("Updating trainer with username: {}", username);
     var existingTrainer = getTrainerByUsername(username);
+    logger.info("Found trainer: {}", username);
 
     updateTrainerFields(trainer, existingTrainer);
 
     var updatedTrainer = trainerDao.update(existingTrainer);
-
     var trainerProfile = createTrainerProfile(updatedTrainer);
     trainerProfile.setUsername(existingTrainer.getUser().getUsername());
 
-    logger.info("Successfully updated trainee with id = {}", username);
-
+    logger.info("Successfully updated trainer with username: {}", username);
     return trainerProfile;
   }
 
@@ -91,7 +94,21 @@ public class TrainerServiceImpl implements TrainerService {
   private void updateTrainerFields(
       UpdateTrainerRequestDto updatedTrainer, Trainer existingTrainer) {
     var user = existingTrainer.getUser();
+    assignSpecialization(existingTrainer, updatedTrainer.getSpecializationId());
     updateUserFields(updatedTrainer, user);
+  }
+
+  private void assignSpecialization(Trainer trainer, Long id) {
+    logger.info("Assigning specialization to trainer");
+    var specialization =
+        trainingTypeDao
+            .findById(id)
+            .orElseThrow(
+                () -> {
+                  logger.error("Spicialization with {} not found", id);
+                  return new TrainerServiceException("Specialization not found");
+                });
+    trainer.setSpecialization(specialization);
   }
 
   private void updateUserFields(UpdateTrainerRequestDto trainer, User user) {
@@ -108,7 +125,7 @@ public class TrainerServiceImpl implements TrainerService {
     var trainerProfile = trainerMapper.toProfileDto(trainer);
     setTraineesToTrainerProfile(trainer, trainerProfile);
 
-    logger.info("Found trainee with {} username", username);
+    logger.info("Found trainer with username: {}", username);
     return trainerProfile;
   }
 
@@ -118,34 +135,49 @@ public class TrainerServiceImpl implements TrainerService {
     trainerProfile.setTrainees(trainerTrainees);
   }
 
-  private Trainer getTrainerByUsername(String username) {
+  private Trainer getTrainerByUsername(String trainerUsername) {
+    logger.info("Finding trainer with username: {}", trainerUsername);
     return trainerDao
-        .findByUsername(username)
-        .orElseThrow(() -> new NotFoundException(TRAINER_NOT_FOUND));
+        .findByUsername(trainerUsername)
+        .orElseThrow(
+            () -> {
+              logger.error(TRAINER_NOT_FOUND, trainerUsername);
+              return new NotFoundException("This trainer doesn't exist");
+            });
+  }
+
+  private Trainee getTraineeByUsername(String traineeUsername) {
+    logger.info("Finding trainee with username: {}", traineeUsername);
+    return traineeDao
+        .findByUsername(traineeUsername)
+        .orElseThrow(
+            () -> {
+              logger.error(TRAINEE_NOT_FOUND, traineeUsername);
+              return new NotFoundException("This trainee doesn't exist");
+            });
   }
 
   @Transactional
   @Override
   public void changeStatus(String username) {
+    logger.info("Changing status for trainer with username: {}", username);
     var existingTrainer = getTrainerByUsername(username);
     var oppositeStatus = !existingTrainer.getUser().isActive();
 
     existingTrainer.getUser().setActive(oppositeStatus);
-    logger.info("Changed status for trainee with username {}", username);
+    logger.info("Changed status for trainer with username: {} to: {}", username, oppositeStatus);
   }
 
   @Transactional(readOnly = true)
   @Override
   public List<TrainerProfileDto> getUnassignedTrainers(String username) {
-    traineeDao
-        .findByUsername(username)
-        .orElseThrow(() -> new NotFoundException("Trainee with such username doesn't exist"));
+    logger.info("Fetching unassigned trainers for trainee: {}", username);
+    getTraineeByUsername(username);
     var trainers = trainerDao.findUnassignedTrainersByTraineeUsername(username);
 
     var trainersProfiles = trainers.stream().map(trainerMapper::toProfileDtoForUnassigned).toList();
 
-    logger.info("Successfully fetched unassigned trainers");
-
+    logger.info("Successfully fetched unassigned trainers by trainee: {}", username);
     return trainersProfiles;
   }
 }

@@ -34,6 +34,7 @@ public class TrainingServiceImpl implements TrainingService {
   @Transactional
   @Override
   public void save(TrainingDto trainingDto) {
+    logger.info("Attempting to save training: {}", trainingDto);
     var trainer = getTrainerByUsername(trainingDto.getTrainerUsername());
     var trainee = getTraineeByUsername(trainingDto.getTraineeUsername());
 
@@ -42,26 +43,36 @@ public class TrainingServiceImpl implements TrainingService {
     trainingToSave.setTrainee(trainee);
 
     trainingDao.save(trainingToSave);
-
-    logger.info("Training saved successfully");
+    logger.info("Training saved successfully: {}", trainingToSave);
   }
 
   private Trainer getTrainerByUsername(String username) {
+    logger.info("Fetching trainer by username: {}", username);
     return trainerDao
         .findByUsername(username)
-        .orElseThrow(() -> new NotFoundException("Trainer not found"));
+        .orElseThrow(
+            () -> {
+              logger.error("Trainer not found: {}", username);
+              return new NotFoundException("Trainer not found");
+            });
   }
 
   private Trainee getTraineeByUsername(String username) {
+    logger.info("Fetching trainee by username: {}", username);
     return traineeDao
         .findByUsername(username)
-        .orElseThrow(() -> new NotFoundException("Trainee not found"));
+        .orElseThrow(
+            () -> {
+              logger.error("Trainee not found: {}", username);
+              return new NotFoundException("Trainee not found");
+            });
   }
 
   @Transactional(readOnly = true)
   @Override
   public List<TraineeTrainingDto> getTrainingsByTraineeUsername(
       String username, Date fromDate, Date toDate, String trainerName, String trainingTypeName) {
+    logger.info("Fetching trainings for trainee: {}, from: {}, to: {}", username, fromDate, toDate);
     getTraineeByUsername(username);
     var trainingType = parseTrainingType(trainingTypeName);
     var trainings =
@@ -71,26 +82,31 @@ public class TrainingServiceImpl implements TrainingService {
     var traineeTrainingsDto =
         trainings.stream().map(trainingMapper::toTraineeTrainingsDto).toList();
 
-    logger.info("Successfully fetched trainings for trainee: {}", username);
+    logger.info(
+        "Successfully fetched {} trainings for trainee: {}", traineeTrainingsDto.size(), username);
 
     return traineeTrainingsDto;
   }
 
   private TrainingType parseTrainingType(String trainingTypeName) {
-    TrainingType trainingType = null;
-    if (trainingTypeName != null && !trainingTypeName.isBlank()) {
-      trainingType =
-          trainingTypeDao
-              .findByName(TrainingType.Type.valueOf(trainingTypeName.toUpperCase()))
-              .orElseThrow(() -> new NotFoundException("Training type not found"));
+    if (trainingTypeName == null || trainingTypeName.isBlank()) {
+      return null;
     }
-    return trainingType;
+    logger.debug("Parsing training type: {}", trainingTypeName);
+    return trainingTypeDao
+        .findByName(TrainingType.Type.valueOf(trainingTypeName.toUpperCase()))
+        .orElseThrow(
+            () -> {
+              logger.error("Training type not found: {}", trainingTypeName);
+              return new NotFoundException("Training type not found");
+            });
   }
 
   @Transactional(readOnly = true)
   @Override
   public List<TrainerTrainingDto> getTrainingsByTrainerUsername(
       String username, Date fromDate, Date toDate, String traineeName) {
+    logger.info("Fetching trainings for trainer: {}, from: {}, to: {}", username, fromDate, toDate);
     getTrainerByUsername(username);
     var trainings =
         trainingDao.getTrainingsByTrainerUsername(username, fromDate, toDate, traineeName);
@@ -98,7 +114,8 @@ public class TrainingServiceImpl implements TrainingService {
     var trainerTrainingsDto =
         trainings.stream().map(trainingMapper::toTrainerTrainingsDto).toList();
 
-    logger.info("Successfully fetched trainings for trainee: {}", username);
+    logger.info(
+        "Successfully fetched {} trainings for trainer: {}", trainerTrainingsDto.size(), username);
 
     return trainerTrainingsDto;
   }

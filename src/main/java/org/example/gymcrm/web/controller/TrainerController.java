@@ -216,7 +216,7 @@ public class TrainerController {
                             "firstName": "John",
                             "lastName": "Doe",
                             "specialization": "3",
-                            "isActive": true
+                            "active": false
                         }
                         """))))
   @ApiResponses({
@@ -305,13 +305,13 @@ public class TrainerController {
       parameters = {
         @Parameter(
             name = "Username",
-            description = "Trainee's username for authentication",
+            description = "Trainer's username for authentication",
             example = "john.doe",
             in = ParameterIn.HEADER,
             required = true),
         @Parameter(
             name = "Password",
-            description = "Trainee's password for authentication",
+            description = "Trainer's password for authentication",
             example = "password123",
             in = ParameterIn.HEADER,
             required = true),

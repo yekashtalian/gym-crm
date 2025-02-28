@@ -10,9 +10,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class UpdateTrainerRequestDto {
-  @NotBlank(message = "Username field is required in request")
-  private String username;
-
   @NotBlank(message = "First name field is required in request")
   @Size(min = 2, max = 30, message = "Trainer first name should be from 2 to 30 symbols")
   @Pattern(

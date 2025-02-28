@@ -184,4 +184,44 @@ public class TraineeControllerTest {
         .perform(patch("/api/v1/trainee/{username}/status", username))
         .andExpect(status().isOk());
   }
+
+  @Test
+  void updateTraineeTrainersList_ShouldReturnUpdatedTrainers() throws Exception {
+    String username = "testuser";
+    UpdateTrainersDto updateTrainersDto = new UpdateTrainersDto(List.of("trainer1", "trainer2"));
+
+    var trainer1 = TraineeTrainersDto.builder().username("trainer1").build();
+    var trainer2 = TraineeTrainersDto.builder().username("trainer2").build();
+    List<TraineeTrainersDto> responseDto = List.of(trainer1, trainer2);
+
+    when(traineeService.updateTraineeTrainers(eq(username), any(UpdateTrainersDto.class)))
+            .thenReturn(responseDto);
+
+    mockMvc
+            .perform(
+                    put("/api/v1/trainee/{username}/trainers", username)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(updateTrainersDto)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.size()").value(2))
+            .andExpect(jsonPath("$[0].username").value("trainer1"))
+            .andExpect(jsonPath("$[1].username").value("trainer2"));
+
+    verify(traineeService).updateTraineeTrainers(eq(username), any(UpdateTrainersDto.class));
+  }
+
+  @Test
+  void updateTraineeTrainersList_ShouldReturnBadRequestWhenInvalid() throws Exception {
+    String username = "testuser";
+    UpdateTrainersDto invalidDto = new UpdateTrainersDto(null);
+
+    mockMvc
+        .perform(
+            put("/api/v1/trainee/{username}/trainers", username)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidDto)))
+        .andExpect(status().isBadRequest());
+
+    verifyNoInteractions(traineeService);
+  }
 }

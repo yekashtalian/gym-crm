@@ -16,10 +16,6 @@ public interface TraineeService {
 
   void changeStatus(String username);
 
-  void addTrainerToList(String traineeUsername, String trainerUsername);
-
-  void removeTrainerFromList(String traineeUsername, String trainerUsername);
-
   List<TraineeTrainersDto> updateTraineeTrainers(
       String username, UpdateTrainersDto updateTrainersDto);
 }

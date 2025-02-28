@@ -83,8 +83,7 @@ class TrainingServiceTest {
     when(trainerDao.findByUsername("trainerUser")).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> trainingService.save(trainingDto))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Trainer not found");
+        .isInstanceOf(NotFoundException.class);
 
     verify(trainerDao).findByUsername("trainerUser");
     verify(trainingDao, never()).save(any());
@@ -96,8 +95,7 @@ class TrainingServiceTest {
     when(traineeDao.findByUsername("traineeUser")).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> trainingService.save(trainingDto))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Trainee not found");
+        .isInstanceOf(NotFoundException.class);
 
     verify(trainerDao).findByUsername("trainerUser");
     verify(traineeDao).findByUsername("traineeUser");

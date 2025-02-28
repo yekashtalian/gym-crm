@@ -81,7 +81,7 @@ public class UserControllerTest {
 
     mockMvc
         .perform(
-            put("/api/v1/user/change-password")
+            put("/api/v1/user/password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(changePasswordRequest)))
         .andExpect(status().isOk());

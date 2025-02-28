@@ -83,7 +83,7 @@ public class UserController {
   }
 
   @RequiresAuthentication
-  @PutMapping("/user/change-password")
+  @PutMapping("/user/password")
   @Operation(
       summary = "Change user password",
       description = "Change the password for an authenticated user",

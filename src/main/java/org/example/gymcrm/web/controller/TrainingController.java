@@ -62,8 +62,7 @@ public class TrainingController {
                             "trainerUsername": "jane.doe",
                             "trainingName": "Morning Cardio",
                             "trainingDate": "2024-12-01",
-                            "trainingDuration": 60,
-                            "trainingTypeId": 1
+                            "duration": 60
                         }
                         """))))
   @ApiResponses({

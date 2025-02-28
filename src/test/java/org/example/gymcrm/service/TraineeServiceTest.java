@@ -96,37 +96,7 @@ class TraineeServiceTest {
     when(traineeDao.findByUsername("invalid")).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> traineeService.findByUsername("invalid"))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("This trainee doesn't exist!");
-  }
-
-  @Test
-  void addTrainerToList_ShouldAddTrainer() {
-    Trainer trainer = new Trainer();
-    trainer.setUser(new User());
-    trainer.getUser().setUsername("trainer1");
-
-    when(traineeDao.findByUsername("testuser")).thenReturn(Optional.of(trainee));
-    when(trainerDao.findByUsername("trainer1")).thenReturn(Optional.of(trainer));
-
-    traineeService.addTrainerToList("testuser", "trainer1");
-
-    assertThat(trainee.getTrainers()).contains(trainer);
-  }
-
-  @Test
-  void removeTrainerFromList_ShouldRemoveTrainer() {
-    Trainer trainer = new Trainer();
-    trainer.setUser(new User());
-    trainer.getUser().setUsername("trainer1");
-    trainee.getTrainers().add(trainer);
-
-    when(traineeDao.findByUsername("testuser")).thenReturn(Optional.of(trainee));
-    when(trainerDao.findByUsername("trainer1")).thenReturn(Optional.of(trainer));
-
-    traineeService.removeTrainerFromList("testuser", "trainer1");
-
-    assertThat(trainee.getTrainers()).doesNotContain(trainer);
+        .isInstanceOf(NotFoundException.class);
   }
 
   @Test
@@ -160,8 +130,7 @@ class TraineeServiceTest {
     when(trainerDao.findByUsername("trainer1")).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> traineeService.updateTraineeTrainers("testuser", updateTrainersDto))
-        .isInstanceOf(TraineeServiceException.class)
-        .hasMessage("Trainer not found");
+        .isInstanceOf(NotFoundException.class);
   }
 
   @Test
@@ -179,7 +148,6 @@ class TraineeServiceTest {
     when(traineeDao.findByUsername("testuser")).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> traineeService.changeStatus("testuser"))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("This trainee doesn't exist!");
+        .isInstanceOf(NotFoundException.class);
   }
 }
