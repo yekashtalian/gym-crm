@@ -1,0 +1,1260 @@
+openapi: 3.0.0
+info:
+  title: Gym CRM API
+  version: 1.0.0
+  description: API for managing gym trainees, trainers, training sessions, and user authentication.
+
+tags:
+  - name: Trainee Controller
+    description: Endpoints for managing trainees
+  - name: Trainer Controller
+    description: Endpoints for managing trainers and their training sessions
+  - name: Training Controller
+    description: Endpoints for managing training sessions
+  - name: Training Type Controller
+    description: Endpoints for managing training types
+  - name: User Controller
+    description: Endpoints for user authentication and password management
+
+paths:
+  /api/v1/trainee/{username}:
+    get:
+      summary: Get trainee by username
+      description: Fetch trainee details by username
+      tags:
+        - Trainee Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainee's username for authentication
+          required: true
+          schema:
+            type: string
+          example: yevhenii.kashtalian
+        - name: Password
+          in: header
+          description: Trainee's password for authentication
+          required: true
+          schema:
+            type: string
+          example: b9T(ac^ydY
+        - name: username
+          in: path
+          description: Username of the trainee
+          required: true
+          schema:
+            type: string
+          example: yevhenii.kashtalian
+      responses:
+        '200':
+          description: Successfully retrieved
+          content:
+            application/json:
+              example:
+                firstName: John
+                lastName: Doe
+                dateOfBirth: "1990-01-01"
+                address: 123 Main St
+                active: true
+                trainers:
+                  - username: john.doe
+                    firstName: John
+                    lastName: Doe
+                    specializationId: "3"
+        '400':
+          description: Invalid username format
+          content:
+            application/json:
+              example:
+                localDateTime: "2024-08-05T16:16:53.8490207"
+                errorMessage: Invalid format. Use two English words separated by a dot (e.g., john.doe).
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+        '404':
+          description: Trainee not found
+          content: { }
+
+    put:
+      summary: Update trainee details
+      description: Update trainee information
+      tags:
+        - Trainee Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainee's username for authentication
+          required: true
+          schema:
+            type: string
+          example: yevhenii.kashtalian
+        - name: Password
+          in: header
+          description: Trainee's password for authentication
+          required: true
+          schema:
+            type: string
+          example: b9T(ac^ydY
+        - name: username
+          in: path
+          description: Username of the trainee
+          required: true
+          schema:
+            type: string
+          example: yevhenii.kashtalian
+      requestBody:
+        description: Trainee to update in the gym
+        required: true
+        content:
+          application/json:
+            example:
+              firstName: Yevhenii
+              lastName: Kashtalian
+              dateOfBirth: "1990-01-01"
+              address: 123 Main St
+              active: false
+      responses:
+        '200':
+          description: Successfully updated
+          content:
+            application/json:
+              example:
+                firstName: John
+                lastName: Doe
+                username: john.doe
+                dateOfBirth: "1990-01-01"
+                address: 123 Main St
+                isActive: true
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              example:
+                localDateTime: "2024-08-05T16:16:53.8490207"
+                errorMessage: Failed to update trainee, the request contains invalid fields
+                errors:
+                  - field: firstName
+                    message: First name cannot be empty
+                    rejectedValue: ""
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+        '404':
+          description: Trainee not found
+          content: { }
+
+    delete:
+      summary: Delete a trainee
+      description: Remove a trainee from the system
+      tags:
+        - Trainee Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainee's username for authentication
+          required: true
+          schema:
+            type: string
+          example: yevhenii.kashtalian
+        - name: Password
+          in: header
+          description: Trainee's password for authentication
+          required: true
+          schema:
+            type: string
+          example: b9T(ac^ydY
+        - name: username
+          in: path
+          description: Username of the trainee
+          required: true
+          schema:
+            type: string
+          example: john.doe
+      responses:
+        '200':
+          description: Successfully deleted
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+        '404':
+          description: Trainee not found
+          content: { }
+
+  /api/v1/trainee:
+    post:
+      summary: Register a new trainee
+      description: Adds a new trainee to the system
+      tags:
+        - Trainee Controller
+      requestBody:
+        description: Trainee to save in the gym
+        required: true
+        content:
+          application/json:
+            example:
+              firstName: Yevhenii
+              lastName: Kashtalian
+              dateOfBirth: "1990-01-01"
+              address: 123 Main St
+      responses:
+        '200':
+          description: Successfully registered
+          content:
+            application/json:
+              example:
+                username: john.doe
+                password: password123
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              example:
+                localDateTime: "2024-08-05T16:16:53.8490207"
+                errorMessage: Failed to create a new trainee, the request contains invalid fields
+                errors:
+                  - field: firstName
+                    message: First name cannot be empty
+                    rejectedValue: ""
+
+  /api/v1/trainee/{username}/trainings:
+    get:
+      summary: Get trainee's trainings
+      description: Fetch all training sessions of a trainee
+      tags:
+        - Trainee Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainee's username for authentication
+          required: true
+          schema:
+            type: string
+          example: yevhenii.kashtalian
+        - name: Password
+          in: header
+          description: Trainee's password for authentication
+          required: true
+          schema:
+            type: string
+          example: b9T(ac^ydY
+        - name: username
+          in: path
+          description: Username of the trainee
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: dateFrom
+          in: query
+          description: Start date for filtering trainings
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          description: End date for filtering trainings
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: trainerName
+          in: query
+          description: Trainer name of the training
+          required: false
+          schema:
+            type: string
+          example: John
+        - name: trainingType
+          in: query
+          description: Training Type
+          required: false
+          schema:
+            type: string
+          example: HIIT
+      responses:
+        '200':
+          description: Successfully retrieved
+          content:
+            application/json:
+              example:
+                - name: testTraining
+                  date: "2020-05-04"
+                  trainingType:
+                    name: HIIT
+                    id: 5
+                  duration: 45
+                  trainerName: John
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+        '404':
+          description: Trainee not found
+          content: { }
+
+  /api/v1/trainee/{username}/trainers:
+    put:
+      summary: Update trainee's trainers list
+      description: Update the list of trainers assigned to a trainee
+      tags:
+        - Trainee Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainee's username for authentication
+          required: true
+          schema:
+            type: string
+          example: yevhenii.kashtalian
+        - name: Password
+          in: header
+          description: Trainee's password for authentication
+          required: true
+          schema:
+            type: string
+          example: b9T(ac^ydY
+        - name: username
+          in: path
+          description: Username of the trainee to update trainers list
+          required: true
+          schema:
+            type: string
+          example: john.doe
+      requestBody:
+        description: List of trainers to assign to the trainee
+        required: true
+        content:
+          application/json:
+            example:
+              trainers:
+                - john.doe
+      responses:
+        '200':
+          description: Successfully updated trainers list
+          content:
+            application/json:
+              example:
+                - username: john.doe
+                  firstName: John
+                  lastName: Doe
+                  specializationId: 1
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              example:
+                localDateTime: "2024-08-05T16:16:53.8490207"
+                errorMessage: Failed to update trainee's trainers list, the request contains invalid fields
+                errors:
+                  - field: trainers
+                    message: Trainers list cannot be empty
+                    rejectedValue: [ ]
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+        '404':
+          description: Trainee not found
+          content: { }
+
+  /api/v1/trainee/{username}/status:
+    patch:
+      summary: Change trainee's active status
+      description: Toggle the active status of a trainee
+      tags:
+        - Trainee Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainer's username for authentication
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: Password
+          in: header
+          description: Trainer's password for authentication
+          required: true
+          schema:
+            type: string
+          example: password123
+        - name: username
+          in: path
+          description: Username of the trainer to change status
+          required: true
+          schema:
+            type: string
+          example: john.doe
+      responses:
+        '200':
+          description: Successfully changed trainee's status
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+        '404':
+          description: Trainee not found
+          content: { }
+
+  /api/v1/trainer/{username}:
+    get:
+      summary: Get trainer by username
+      description: Fetch trainer details by username
+      tags:
+        - Trainer Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainer's username for authentication
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: Password
+          in: header
+          description: Trainer's password for authentication
+          required: true
+          schema:
+            type: string
+          example: password123
+        - name: username
+          in: path
+          description: Username of the trainer to fetch
+          required: true
+          schema:
+            type: string
+          example: john.doe
+      responses:
+        '200':
+          description: Successfully retrieved trainer profile
+          content:
+            application/json:
+              example:
+                firstName: John
+                lastName: Doe
+                specializationId: "3"
+                isActive: true
+                trainees: [ ]
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+        '404':
+          description: Trainer not found
+          content: { }
+
+    put:
+      summary: Update trainer details
+      description: Update trainer information
+      tags:
+        - Trainer Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainer's username for authentication
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: Password
+          in: header
+          description: Trainer's password for authentication
+          required: true
+          schema:
+            type: string
+          example: password123
+        - name: username
+          in: path
+          description: Username of the trainer to update
+          required: true
+          schema:
+            type: string
+          example: john.doe
+      requestBody:
+        description: Trainer details to be updated
+        required: true
+        content:
+          application/json:
+            example:
+              firstName: John
+              lastName: Doe
+              specialization: "3"
+              active: false
+      responses:
+        '200':
+          description: Successfully updated trainer profile
+          content:
+            application/json:
+              example:
+                username: john.doe
+                firstName: John
+                lastName: Doe
+                specialization: "3"
+                isActive: true
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              example:
+                localDateTime: "2024-08-05T16:16:53.8490207"
+                errorMessage: Failed to update trainer, the request contains invalid fields
+                errors:
+                  - field: firstName
+                    message: First name cannot be empty
+                    rejectedValue: ""
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+        '404':
+          description: Trainer not found
+          content: { }
+
+  /api/v1/trainer:
+    post:
+      summary: Register a new trainer
+      description: Adds a new trainer to the system
+      tags:
+        - Trainer Controller
+      requestBody:
+        description: Trainer details to be registered
+        required: true
+        content:
+          application/json:
+            example:
+              firstName: John
+              lastName: Doe
+              specializationId: "2"
+      responses:
+        '200':
+          description: Successfully registered trainer
+          content:
+            application/json:
+              example:
+                username: john.doe
+                password: password123
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              example:
+                localDateTime: "2024-08-05T16:16:53.8490207"
+                errorMessage: Failed to register trainer, the request contains invalid fields
+                errors:
+                  - field: firstName
+                    message: First name cannot be empty
+                    rejectedValue: ""
+
+  /api/v1/trainers/unassigned:
+    get:
+      summary: Get unassigned trainers
+      description: Fetch a list of trainers who are not assigned to any trainee
+      tags:
+        - Trainer Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainer's username for authentication
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: Password
+          in: header
+          description: Trainer's password for authentication
+          required: true
+          schema:
+            type: string
+          example: password123
+        - name: username
+          in: query
+          description: Trainee's username to fetch unassigned trainers
+          required: true
+          schema:
+            type: string
+          example: john.doe
+      responses:
+        '200':
+          description: Successfully retrieved unassigned trainers
+          content:
+            application/json:
+              example:
+                - username: jane.doe
+                  firstName: Jane
+                  lastName: Doe
+                  specializationId: "3"
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+
+  /api/v1/trainer/{username}/trainings:
+    get:
+      summary: Get trainer's trainings
+      description: Fetch all training sessions of a trainer
+      tags:
+        - Trainer Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainer's username for authentication
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: Password
+          in: header
+          description: Trainer's password for authentication
+          required: true
+          schema:
+            type: string
+          example: password123
+        - name: username
+          in: path
+          description: Username of the trainer to fetch trainings
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: from
+          in: query
+          description: Start date for filtering trainings (yyyy-MM-dd)
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2024-01-01"
+        - name: to
+          in: query
+          description: End date for filtering trainings (yyyy-MM-dd)
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2024-12-31"
+        - name: traineeName
+          in: query
+          description: Trainee's name for filtering trainings
+          required: false
+          schema:
+            type: string
+          example: Jane Doe
+      responses:
+        '200':
+          description: Successfully retrieved trainer's trainings
+          content:
+            application/json:
+              example:
+                - trainingName: Morning Cardio
+                  trainingDate: "2024-12-01"
+                  trainingType:
+                    - name: CARDIO
+                      id: "3"
+                  trainingDuration: 60
+                  traineeName: Jane Doe
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+        '404':
+          description: Trainer not found
+          content: { }
+
+  /api/v1/trainer/{username}/status:
+    patch:
+      summary: Change trainer's active status
+      description: Toggle the active status of a trainer
+      tags:
+        - Trainer Controller
+      parameters:
+        - name: Username
+          in: header
+          description: Trainer's username for authentication
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: Password
+          in: header
+          description: Trainer's password for authentication
+          required: true
+          schema:
+            type: string
+          example: password123
+        - name: username
+          in: path
+          description: Username of the trainer to change status
+          required: true
+          schema:
+            type: string
+          example: john.doe
+      responses:
+        '200':
+          description: Successfully changed trainer's status
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+        '404':
+          description: Trainer not found
+          content: { }
+
+  /api/v1/training:
+    post:
+      summary: Create a new training session
+      description: Adds a new training session to the system
+      tags:
+        - Training Controller
+      parameters:
+        - name: Username
+          in: header
+          description: User's username for authentication
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: Password
+          in: header
+          description: User's password for authentication
+          required: true
+          schema:
+            type: string
+          example: password123
+      requestBody:
+        description: Training session details to be saved
+        required: true
+        content:
+          application/json:
+            example:
+              traineeUsername: john.doe
+              trainerUsername: jane.doe
+              trainingName: Morning Cardio
+              trainingDate: "2024-12-01"
+              duration: 60
+      responses:
+        '200':
+          description: Training session successfully created
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              example:
+                localDateTime: "2024-08-05T16:16:53.8490207"
+                errorMessage: Invalid request body
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+
+  /api/v1/training-types:
+    get:
+      summary: Get all training types
+      description: Fetch a list of all available training types
+      tags:
+        - Training Type Controller
+      parameters:
+        - name: Username
+          in: header
+          description: User's username for authentication
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: Password
+          in: header
+          description: User's password for authentication
+          required: true
+          schema:
+            type: string
+          example: password123
+      responses:
+        '200':
+          description: Successfully retrieved training types
+          content:
+            application/json:
+              example:
+                - id: 1
+                  name: Cardio
+                - id: 2
+                  name: Strength Training
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+
+  /api/v1/user/login:
+    post:
+      summary: User login
+      description: Authenticate a user with their username and password
+      tags:
+        - User Controller
+      requestBody:
+        description: User credentials for authentication
+        required: true
+        content:
+          application/json:
+            example:
+              username: john.doe
+              password: password123
+      responses:
+        '200':
+          description: Login successful
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              example:
+                localDateTime: "2024-08-05T16:16:53.8490207"
+                errorMessage: Invalid credentials!
+
+  /api/v1/user/password:
+    put:
+      summary: Change user password
+      description: Change the password for an authenticated user
+      tags:
+        - User Controller
+      parameters:
+        - name: Username
+          in: header
+          description: User's username for authentication
+          required: true
+          schema:
+            type: string
+          example: john.doe
+        - name: Password
+          in: header
+          description: User's password for authentication
+          required: true
+          schema:
+            type: string
+          example: password123
+      requestBody:
+        description: Password change request details
+        required: true
+        content:
+          application/json:
+            example:
+              username: john.doe
+              oldPassword: password123
+              newPassword: newPassword123
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              example:
+                localDateTime: "2024-08-05T16:16:53.8490207"
+                errorMessage: Failed to change password, the request contains invalid fields
+                errors:
+                  - field: oldPassword
+                    message: Old password cannot be empty
+                    rejectedValue: ""
+        '401':
+          description: Missing authentication headers response
+          content:
+            application/json:
+              examples:
+                Missing headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Missing authentication headers
+                Invalid headers:
+                  value:
+                    localDateTime: "2024-08-05T16:16:53.8490207"
+                    errorMessage: Invalid credentials
+components:
+  schemas:
+    ChangePasswordRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+      required:
+        - newPassword
+        - oldPassword
+        - username
+
+    UpdateTrainerRequestDto:
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 30
+          minLength: 2
+          pattern: "^[A-Za-z-' ]+$"
+        lastName:
+          type: string
+          maxLength: 35
+          minLength: 2
+          pattern: "^[A-Za-z-' ]+$"
+        specializationId:
+          type: integer
+          format: int64
+        active:
+          type: boolean
+      required:
+        - active
+        - firstName
+        - lastName
+
+    TrainerProfileDto:
+      type: object
+      properties:
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        specialization:
+          type: integer
+          format: int64
+        active:
+          type: boolean
+        trainees:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrainerTraineesDto"
+
+    TrainerTraineesDto:
+      type: object
+      properties:
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+
+    UpdateTraineeRequestDto:
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 30
+          minLength: 2
+          pattern: "^[A-Za-z-' ]+$"
+        lastName:
+          type: string
+          maxLength: 35
+          minLength: 2
+          pattern: "^[A-Za-z-' ]+$"
+        dateOfBirth:
+          type: string
+          format: date-time
+        address:
+          type: string
+        active:
+          type: boolean
+      required:
+        - active
+        - firstName
+        - lastName
+
+    TraineeProfileDto:
+      type: object
+      properties:
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date-time
+        address:
+          type: string
+        active:
+          type: boolean
+        trainers:
+          type: array
+          items:
+            $ref: "#/components/schemas/TraineeTrainersDto"
+
+    TraineeTrainersDto:
+      type: object
+      properties:
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        specializationId:
+          type: integer
+          format: int64
+
+    UpdateTrainersDto:
+      type: object
+      properties:
+        trainers:
+          type: array
+          items:
+            type: string
+      required:
+        - trainers
+
+    LoginDto:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - password
+        - username
+
+    TrainingDto:
+      type: object
+      properties:
+        traineeUsername:
+          type: string
+        trainerUsername:
+          type: string
+        trainingName:
+          type: string
+          maxLength: 20
+          minLength: 5
+        trainingDate:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          format: int32
+          maximum: 90
+          minimum: 25
+      required:
+        - duration
+        - traineeUsername
+        - trainerUsername
+        - trainingDate
+        - trainingName
+
+    RegisterTrainerRequestDto:
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 30
+          minLength: 2
+          pattern: "^[A-Za-z-' ]+$"
+        lastName:
+          type: string
+          maxLength: 35
+          minLength: 2
+          pattern: "^[A-Za-z-' ]+$"
+        specializationId:
+          type: integer
+          format: int64
+      required:
+        - firstName
+        - lastName
+        - specializationId
+
+    RegisterTrainerResponseDto:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    RegisterTraineeRequestDto:
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 30
+          minLength: 2
+          pattern: "^[A-Za-z-' ]+$"
+        lastName:
+          type: string
+          maxLength: 35
+          minLength: 2
+          pattern: "^[A-Za-z-' ]+$"
+        dateOfBirth:
+          type: string
+          format: date-time
+        address:
+          type: string
+      required:
+        - firstName
+        - lastName
+
+    RegisterTraineeResponseDto:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    TrainingTypeDto:
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: integer
+          format: int64
+
+    TrainerTrainingDto:
+      type: object
+      properties:
+        name:
+          type: string
+        date:
+          type: string
+          format: date-time
+        trainingType:
+          $ref: "#/components/schemas/TrainingTypeDto"
+        duration:
+          type: integer
+          format: int32
+        traineeName:
+          type: string
+
+    TraineeTrainingDto:
+      type: object
+      properties:
+        name:
+          type: string
+        date:
+          type: string
+          format: date-time
+        trainingType:
+          $ref: "#/components/schemas/TrainingTypeDto"
+        duration:
+          type: integer
+          format: int32
+        trainerName:
+          type: string
