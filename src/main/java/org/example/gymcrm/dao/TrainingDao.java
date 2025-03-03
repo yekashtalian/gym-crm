@@ -14,8 +14,8 @@ public interface TrainingDao {
   Optional<Training> findById(Long id);
 
   List<Training> getTrainingsByTraineeUsername(
-      String username, Date fromDate, Date toDate, String firstName);
+      String username, Date fromDate, Date toDate, String trainerName, TrainingType trainingType);
 
   List<Training> getTrainingsByTrainerUsername(
-      String username, Date fromDate, Date toDate, TrainingType.Type type, String firstName);
+      String username, Date fromDate, Date toDate, String traineeName);
 }

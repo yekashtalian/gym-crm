@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.example.gymcrm.entity.Trainer;
 
 public interface TrainerDao {
-  void save(Trainer trainer);
+  Trainer save(Trainer trainer);
 
   List<String> findUsernames();
 
@@ -13,9 +13,7 @@ public interface TrainerDao {
 
   Optional<Trainer> findById(Long id);
 
-  void update(Trainer trainer);
+  Trainer update(Trainer trainer);
 
   List<Trainer> findUnassignedTrainersByTraineeUsername(String username);
-
-  List<Trainer> findAll();
 }

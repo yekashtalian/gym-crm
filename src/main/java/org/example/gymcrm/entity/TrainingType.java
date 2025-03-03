@@ -1,10 +1,7 @@
 package org.example.gymcrm.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 @Entity
 @Table(name = "training_types")
@@ -12,6 +9,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 public class TrainingType {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,4 +35,5 @@ public class TrainingType {
     INDIVIDUAL,
     GROUP
   }
+
 }

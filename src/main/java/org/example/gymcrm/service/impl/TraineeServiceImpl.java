@@ -1,220 +1,201 @@
 package org.example.gymcrm.service.impl;
 
-import static jakarta.validation.Validation.buildDefaultValidatorFactory;
 import static org.example.gymcrm.util.ProfileUtils.*;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ValidationException;
-import jakarta.validation.Validator;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
-import org.example.gymcrm.dto.TraineeProfileDTO;
+import org.example.gymcrm.dto.*;
 import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
-import org.example.gymcrm.exception.AuthenticationException;
+import org.example.gymcrm.entity.User;
+import org.example.gymcrm.exception.NotFoundException;
 import org.example.gymcrm.exception.TraineeServiceException;
-import org.example.gymcrm.exception.TrainerServiceException;
+import org.example.gymcrm.mapper.TraineeMapper;
 import org.example.gymcrm.service.TraineeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class TraineeServiceImpl implements TraineeService {
   private static final Logger logger = LoggerFactory.getLogger(TraineeServiceImpl.class);
   private static final String TRAINEE_NOT_FOUND = "This trainee doesn't exist!";
-  private TraineeDao traineeDao;
-  private TrainerDao trainerDao;
-  private final Validator validator;
-
-  @Autowired
-  public TraineeServiceImpl(TraineeDao traineeDao, TrainerDao trainerDao) {
-    this.traineeDao = traineeDao;
-    this.trainerDao = trainerDao;
-    this.validator = buildDefaultValidatorFactory().getValidator();
-  }
+  private static final String TRAINER_NOT_FOUND = "This trainer doesn't exist!";
+  private final TraineeDao traineeDao;
+  private final TrainerDao trainerDao;
+  private final TraineeMapper traineeMapper;
 
   @Transactional
   @Override
-  public void save(Trainee trainee) {
-    validateTrainee(trainee);
-    if (trainee.getId() == null) {
-      assignGeneratedCredentials(trainee);
-      traineeDao.save(trainee);
-    } else {
-      traineeDao.update(trainee);
-    }
-    logger.info("Successfully saved {}", trainee);
-  }
+  public RegisterTraineeResponseDto save(RegisterTraineeRequestDto traineeRequestDto) {
+    logger.info("Attempting to register a new trainee");
+    var user = traineeMapper.registerDtoToUser(traineeRequestDto);
+    var trainee = traineeMapper.registerDtoToTrainee(traineeRequestDto);
 
-  private void validateTrainee(Trainee trainee) {
-    for (ConstraintViolation<Trainee> violation : validator.validate(trainee)) {
-      throw new ValidationException("Invalid trainee field: " + violation.getMessage());
-    }
-  }
+    trainee.setUser(user);
+    assignGeneratedCredentials(trainee);
 
-  @Transactional
-  @Override
-  public void update(Long id, Trainee trainee) {
-    validateTrainee(trainee);
+    var savedTrainee = traineeDao.save(trainee);
+    var responseDto = traineeMapper.traineeToDto(savedTrainee.getUser());
 
-    var existingTrainee =
-        traineeDao.findById(id).orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
+    logger.info("Successfully registered trainee with username: {}", responseDto.getUsername());
 
-    updateTraineeFields(trainee, existingTrainee);
-    traineeDao.update(existingTrainee);
-    logger.info("Successfully updated trainee with id = {}", id);
-  }
-
-  private void updateTraineeFields(Trainee trainee, Trainee existingTrainee) {
-    var firstName = trainee.getUser().getFirstName();
-    var lastName = trainee.getUser().getLastName();
-    var username = trainee.getUser().getUsername();
-    var dateOfBirth = trainee.getDateOfBirth();
-    var address = trainee.getAddress();
-
-    existingTrainee.getUser().setFirstName(firstName);
-    existingTrainee.getUser().setLastName(lastName);
-    if (trainee.getUser().getUsername() != null) {
-      existingTrainee.getUser().setUsername(username);
-    }
-    if (trainee.getDateOfBirth() != null) {
-      existingTrainee.setDateOfBirth(dateOfBirth);
-    }
-    if (trainee.getAddress() != null) {
-      existingTrainee.setAddress(address);
-    }
-  }
-
-  @Transactional
-  @Override
-  public void deleteByUsername(String username) {
-    getTraineeByUsername(username);
-    traineeDao.deleteByUsername(username);
-    logger.info("Successfully removed trainee by {} username", username);
-  }
-
-  @Transactional
-  @Override
-  public void changePassword(String oldPassword, String newPassword, String username) {
-    var existingTrainee = getTraineeByUsername(username);
-
-    if (!existingTrainee.getUser().getPassword().equals(oldPassword)) {
-      throw new TrainerServiceException("Trainer current password doesnt match with old password");
-    }
-
-    existingTrainee.getUser().setPassword(newPassword);
-    logger.info("Successfully changed password for trainee with {} username", username);
-  }
-
-  @Transactional(readOnly = true)
-  @Override
-  public List<TraineeProfileDTO> findAll() {
-    var traineesProfiles = traineeDao.findAll().stream().map(this::mapToDto).toList();
-    logger.info("Successfully fetched all trainees");
-    return traineesProfiles;
-  }
-
-  private TraineeProfileDTO mapToDto(Trainee trainee) {
-    return new TraineeProfileDTO(
-        trainee.getId(),
-        trainee.getUser().getFirstName(),
-        trainee.getUser().getLastName(),
-        trainee.getUser().getUsername(),
-        trainee.getUser().getPassword(),
-        trainee.getUser().isActive(),
-        trainee.getDateOfBirth(),
-        trainee.getAddress(),
-        trainee.getTrainers().stream().map(trainer -> trainer.getUser().getUsername()).toList());
-  }
-
-  @Transactional(readOnly = true)
-  @Override
-  public TraineeProfileDTO findByUsername(String username) {
-    var traineeProfileDto =
-        traineeDao
-            .findByUsername(username)
-            .map(this::mapToDto)
-            .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
-
-    logger.info("Found trainee with {} username", username);
-    return traineeProfileDto;
-  }
-
-  @Transactional
-  @Override
-  public void changeStatus(Long id) {
-    var existingTrainee =
-        traineeDao.findById(id).orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
-    var oppositeStatus = !existingTrainee.getUser().isActive();
-
-    existingTrainee.getUser().setActive(oppositeStatus);
-    logger.info("Changed status for trainee with id {}", id);
-  }
-
-  @Transactional(readOnly = true)
-  @Override
-  public boolean authenticate(String username, String password) {
-    traineeDao
-        .findByUsername(username)
-        .map(Trainee::getUser)
-        .filter(user -> user.getPassword().equals(password))
-        .orElseThrow(() -> new AuthenticationException("Invalid username or password!"));
-
-    logger.info("Successfully authenticated trainee: {}", username);
-    return true;
-  }
-
-  @Transactional
-  @Override
-  public void addTrainerToList(String traineeUsername, String trainerUsername) {
-    var trainee = getTraineeByUsername(traineeUsername);
-    var trainer = getTrainerByUsername(trainerUsername);
-
-    if (trainee.getTrainers().contains(trainer)) {
-      throw new TraineeServiceException("This trainer is already in trainee's favorite list");
-    }
-
-    trainee.addTrainer(trainer);
-    logger.info(
-        "Successfully added trainer: {} to trainee: {} list", trainerUsername, traineeUsername);
-  }
-
-  @Transactional
-  @Override
-  public void removeTrainerFromList(String traineeUsername, String trainerUsername) {
-    var trainee = getTraineeByUsername(traineeUsername);
-    var trainer = getTrainerByUsername(trainerUsername);
-
-    if (trainee.getTrainers().contains(trainer)) {
-      trainee.removeTrainer(trainer);
-      logger.info(
-          "Successfully removed trainer: {} from trainee: {}", trainerUsername, traineeUsername);
-    } else {
-      throw new TraineeServiceException("This trainer is not in trainee favorite list");
-    }
-  }
-
-  private Trainer getTrainerByUsername(String trainerUsername) {
-    return trainerDao
-        .findByUsername(trainerUsername)
-        .orElseThrow(() -> new TraineeServiceException("This trainer doesn't exist"));
-  }
-
-  private Trainee getTraineeByUsername(String traineeUsername) {
-    return traineeDao
-        .findByUsername(traineeUsername)
-        .orElseThrow(() -> new TraineeServiceException(TRAINEE_NOT_FOUND));
+    return responseDto;
   }
 
   private void assignGeneratedCredentials(Trainee trainee) {
+    logger.info("Assigning credentials for trainee: {}", trainee.getUser().getUsername());
+
     var usernames = mergeAllUsernames(traineeDao.findUsernames(), trainerDao.findUsernames());
     var user = trainee.getUser();
 
     user.setUsername(generateUsername(user.getFirstName(), user.getLastName(), usernames));
     user.setPassword(generateRandomPassword());
+  }
+
+  @Transactional
+  @Override
+  public TraineeProfileDto update(String username, UpdateTraineeRequestDto trainee) {
+    logger.info("Updating trainee with username: {}", username);
+    var existingTrainee = getTraineeByUsername(username);
+    logger.info("Found trainee: {}", username);
+
+    updateTraineeFields(trainee, existingTrainee);
+
+    var updatedTrainee = traineeDao.update(existingTrainee);
+
+    var traineeProfile = createTraineeProfile(updatedTrainee);
+    traineeProfile.setUsername(existingTrainee.getUser().getUsername());
+
+    logger.info("Successfully updated trainee with username: {}", username);
+    return traineeProfile;
+  }
+
+  private void updateTraineeFields(UpdateTraineeRequestDto trainee, Trainee existingTrainee) {
+    var user = existingTrainee.getUser();
+    updateUserFields(trainee, user);
+
+    Optional.ofNullable(trainee.getDateOfBirth()).ifPresent(existingTrainee::setDateOfBirth);
+    Optional.ofNullable(trainee.getAddress()).ifPresent(existingTrainee::setAddress);
+  }
+
+  private void updateUserFields(UpdateTraineeRequestDto trainee, User user) {
+    user.setFirstName(trainee.getFirstName());
+    user.setLastName(trainee.getLastName());
+    user.setActive(trainee.getActive());
+  }
+
+  private TraineeProfileDto createTraineeProfile(Trainee trainee) {
+    var traineeProfile = traineeMapper.toProfileDto(trainee);
+    setTrainersToTraineeProfile(trainee, traineeProfile);
+    return traineeProfile;
+  }
+
+  private void setTrainersToTraineeProfile(Trainee trainee, TraineeProfileDto traineeProfile) {
+    var traineeTrainers =
+        trainee.getTrainers().stream().map(traineeMapper::toTraineeTrainersDto).toList();
+    traineeProfile.setTrainers(traineeTrainers);
+  }
+
+  @Transactional
+  @Override
+  public void deleteByUsername(String username) {
+    logger.info("Deleting trainee with username: {}", username);
+
+    getTraineeByUsername(username);
+    traineeDao.deleteByUsername(username);
+
+    logger.info("Successfully removed trainee with username: {}", username);
+  }
+
+  @Transactional(readOnly = true)
+  @Override
+  public TraineeProfileDto findByUsername(String username) {
+    var trainee = getTraineeByUsername(username);
+    var traineeProfile = createTraineeProfile(trainee);
+
+    logger.info("Found trainee with username: {}", username);
+
+    return traineeProfile;
+  }
+
+  @Transactional
+  @Override
+  public void changeStatus(String username) {
+    logger.info("Changing status for trainee with username: {}", username);
+
+    var existingTrainee = getTraineeByUsername(username);
+    var oppositeStatus = !existingTrainee.getUser().isActive();
+
+    existingTrainee.getUser().setActive(oppositeStatus);
+
+    logger.info("Changed status for trainee with username: {} to: {}", username, oppositeStatus);
+  }
+
+  @Transactional
+  @Override
+  public List<TraineeTrainersDto> updateTraineeTrainers(
+      String username, UpdateTrainersDto updateTrainersDto) {
+    logger.info("Updating trainers list for trainee: {}", username);
+
+    Trainee existingTrainee = getTraineeByUsername(username);
+    var trainers = extractTrainers(updateTrainersDto.getTrainers());
+
+    existingTrainee.setTrainers(trainers);
+    traineeDao.update(existingTrainee);
+    logger.info("Successfully updated trainers list for trainee: {}", username);
+
+    return trainers.stream().map(traineeMapper::toTraineeTrainersDto).collect(Collectors.toList());
+  }
+
+  private Set<Trainer> extractTrainers(List<String> trainersUsernames) {
+    logger.info("Processing trainers usernames from request");
+
+    var cleanedUsernames = cleanUsernames(trainersUsernames);
+
+    if (cleanedUsernames == null || cleanedUsernames.isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    return cleanedUsernames.stream().map(this::getTrainerByUsername).collect(Collectors.toSet());
+  }
+
+  private List<String> cleanUsernames(List<String> trainersUsernames) {
+    logger.info("Cleaning and filtering trainers usernames");
+
+    return trainersUsernames.stream()
+        .map(username -> username.replaceAll("[\\[\\]\"]", "").trim())
+        .filter(username -> !username.isEmpty())
+        .toList();
+  }
+
+  private Trainer getTrainerByUsername(String trainerUsername) {
+    logger.info("Finding trainee with username: {}", trainerUsername);
+    return trainerDao
+        .findByUsername(trainerUsername)
+        .orElseThrow(
+            () -> {
+              logger.error(TRAINER_NOT_FOUND, trainerUsername);
+              return new NotFoundException("This trainer doesn't exist");
+            });
+  }
+
+  private Trainee getTraineeByUsername(String traineeUsername) {
+    logger.info("Finding trainee with username: {}", traineeUsername);
+    return traineeDao
+        .findByUsername(traineeUsername)
+        .orElseThrow(
+            () -> {
+              logger.error(TRAINEE_NOT_FOUND, traineeUsername);
+              return new NotFoundException("This trainee doesn't exist");
+            });
   }
 }

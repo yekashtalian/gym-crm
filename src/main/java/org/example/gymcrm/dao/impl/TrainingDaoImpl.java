@@ -5,15 +5,16 @@ import jakarta.persistence.PersistenceContext;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import jakarta.persistence.TemporalType;
 import org.example.gymcrm.dao.TrainingDao;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.TrainingType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class TrainingDaoImpl implements TrainingDao {
-  @PersistenceContext @Autowired private EntityManager entityManager;
+  @PersistenceContext private EntityManager entityManager;
 
   @Override
   public List<Training> findAll() {
@@ -35,50 +36,87 @@ public class TrainingDaoImpl implements TrainingDao {
 
   @Override
   public List<Training> getTrainingsByTraineeUsername(
-      String username, Date fromDate, Date toDate, String firstName) {
-    var trainings =
+      String username, Date fromDate, Date toDate, String trainerName, TrainingType trainingType) {
+
+    StringBuilder jpql =
+        new StringBuilder(
+            """
+        SELECT t FROM Training t
+        JOIN t.trainee trainee
+        WHERE trainee.user.username = :username
+        """);
+
+    if (fromDate != null) {
+      jpql.append(" AND t.date >= :fromDate");
+    }
+    if (toDate != null) {
+      jpql.append(" AND t.date <= :toDate");
+    }
+    if (trainerName != null) {
+      jpql.append(" AND t.trainer.user.firstName = :trainerName");
+    }
+    if (trainingType != null) {
+      jpql.append(" AND t.type = :trainingType");
+    }
+
+    var query =
         entityManager
-            .createQuery(
-                """
-                        SELECT t FROM Training t
-                        JOIN t.trainee trainee
-                        WHERE trainee.user.username = :username
-                        AND (CAST(:fromDate AS date)) IS NULL OR t.date >= :fromDate
-                        AND (CAST(:toDate AS date)) IS NULL OR t.date <= :toDate
-                        AND (:firstName IS NULL OR trainee.user.firstName = :firstName)
-                        """,
-                Training.class)
-            .setParameter("username", username)
-            .setParameter("fromDate", fromDate)
-            .setParameter("toDate", toDate)
-            .setParameter("firstName", firstName)
-            .getResultList();
-    return trainings;
+            .createQuery(jpql.toString(), Training.class)
+            .setParameter("username", username);
+
+    if (fromDate != null) {
+      query.setParameter("fromDate", fromDate, TemporalType.DATE);
+    }
+    if (toDate != null) {
+      query.setParameter("toDate", toDate, TemporalType.DATE);
+    }
+    if (trainerName != null) {
+      query.setParameter("trainerName", trainerName);
+    }
+    if (trainingType != null) {
+      query.setParameter("trainingType", trainingType);
+    }
+
+    return query.getResultList();
   }
 
   @Override
   public List<Training> getTrainingsByTrainerUsername(
-      String username, Date fromDate, Date toDate, TrainingType.Type type, String firstName) {
-    var trainings =
+      String username, Date fromDate, Date toDate, String traineeName) {
+
+    StringBuilder jpql =
+        new StringBuilder(
+            """
+                    SELECT t FROM Training t
+                    JOIN t.trainer trainer
+                    WHERE trainer.user.username = :username
+                    """);
+
+    if (fromDate != null) {
+      jpql.append(" AND t.date >= :fromDate");
+    }
+    if (toDate != null) {
+      jpql.append(" AND t.date <= :toDate");
+    }
+    if (traineeName != null) {
+      jpql.append(" AND t.trainee.user.firstName = :traineeName");
+    }
+
+    var query =
         entityManager
-            .createQuery(
-                """
-                            SELECT t FROM Training t
-                            JOIN t.trainer trainer
-                            JOIN t.trainer.specialization spec
-                            WHERE trainer.user.username = :username
-                            AND (CAST(:fromDate AS date)) IS NULL OR t.date >= :fromDate
-                            AND (CAST(:toDate AS date)) IS NULL OR t.date <= :toDate
-                            AND (:firstName IS NULL OR trainer.user.firstName = :firstName)
-                            AND (:type IS NULL OR spec.name = :type)
-                            """,
-                Training.class)
-            .setParameter("username", username)
-            .setParameter("fromDate", fromDate)
-            .setParameter("toDate", toDate)
-            .setParameter("type", type)
-            .setParameter("firstName", firstName)
-            .getResultList();
-    return trainings;
+            .createQuery(jpql.toString(), Training.class)
+            .setParameter("username", username);
+
+    if (fromDate != null) {
+      query.setParameter("fromDate", fromDate, TemporalType.DATE);
+    }
+    if (toDate != null) {
+      query.setParameter("toDate", toDate, TemporalType.DATE);
+    }
+    if (traineeName != null) {
+      query.setParameter("traineeName", traineeName);
+    }
+
+    return query.getResultList();
   }
 }

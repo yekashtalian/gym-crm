@@ -123,16 +123,4 @@ class TraineeDaoTest {
 
     verify(entityManager, times(1)).merge(trainee);
   }
-
-  @Test
-  void testFindAll() {
-    when(entityManager.createQuery(anyString(), eq(Trainee.class))).thenReturn(traineeQuery);
-    when(traineeQuery.getResultList()).thenReturn(List.of(createTrainee("trainee1"), createTrainee("trainee2")));
-
-    List<Trainee> trainees = traineeDao.findAll();
-
-    assertThat(trainees).hasSize(2);
-    verify(entityManager, times(1)).createQuery(anyString(), eq(Trainee.class));
-    verify(traineeQuery, times(1)).getResultList();
-  }
 }

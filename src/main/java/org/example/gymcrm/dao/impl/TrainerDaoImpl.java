@@ -7,16 +7,16 @@ import java.util.List;
 import java.util.Optional;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.entity.Trainer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class TrainerDaoImpl implements TrainerDao {
-  @PersistenceContext @Autowired private EntityManager entityManager;
+  @PersistenceContext private EntityManager entityManager;
 
   @Override
-  public void save(Trainer trainer) {
+  public Trainer save(Trainer trainer) {
     entityManager.persist(trainer);
+    return trainer;
   }
 
   @Override
@@ -31,18 +31,19 @@ public class TrainerDaoImpl implements TrainerDao {
   @Override
   public Optional<Trainer> findByUsername(String username) {
     try {
-      var trainer =
-          entityManager
+      var trainer = entityManager
               .createQuery(
-                  "select tr from Trainer tr join fetch tr.user u where u.username = :username",
-                  Trainer.class)
+                      "SELECT tr FROM Trainer tr JOIN FETCH tr.user u WHERE u.username = :username",
+                      Trainer.class)
               .setParameter("username", username)
               .getSingleResult();
+
       return Optional.of(trainer);
     } catch (NoResultException e) {
       return Optional.empty();
     }
   }
+
 
   @Override
   public Optional<Trainer> findById(Long id) {
@@ -51,32 +52,27 @@ public class TrainerDaoImpl implements TrainerDao {
   }
 
   @Override
-  public void update(Trainer trainer) {
-    entityManager.merge(trainer);
+  public Trainer update(Trainer trainer) {
+    return entityManager.merge(trainer);
   }
 
   @Override
   public List<Trainer> findUnassignedTrainersByTraineeUsername(String username) {
-    var trainers =
+    List<Trainer> trainers =
         entityManager
             .createQuery(
-                "select tr from Trainer tr "
-                    + "left join fetch tr.trainings "
-                    + "where tr not in "
-                    + "(select distinct t.trainer from Training t where t.trainee.user.username = :username)",
+                    """
+                            select tr from Trainer tr
+                            left join fetch tr.user
+                            left join fetch tr.trainings
+                            where tr not in (
+                              select t.trainer from Training t
+                              where t.trainee.user.username = :username
+                            )
+                            and tr.user.isActive = true
+                            """,
                 Trainer.class)
             .setParameter("username", username)
-            .getResultList();
-    return trainers;
-  }
-
-  @Override
-  public List<Trainer> findAll() {
-    var trainers =
-        entityManager
-            .createQuery(
-                "select tr from Trainer tr join fetch tr.user join fetch tr.specialization",
-                Trainer.class)
             .getResultList();
     return trainers;
   }

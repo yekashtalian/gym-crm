@@ -1,121 +1,143 @@
 package org.example.gymcrm.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.*;
-
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.TemporalType;
 import jakarta.persistence.TypedQuery;
 import org.example.gymcrm.dao.impl.TrainingDaoImpl;
+import org.example.gymcrm.entity.Trainee;
+import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.Training;
 import org.example.gymcrm.entity.TrainingType;
+import org.example.gymcrm.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
 @ExtendWith(MockitoExtension.class)
-public class TrainingDaoTest {
+class TrainingDaoTest {
 
-    @Mock
-    private EntityManager entityManager;
+  @Mock private EntityManager entityManager;
 
-    @InjectMocks
-    private TrainingDaoImpl trainingDao;
+  @Mock private TypedQuery<Training> query;
 
-    private Training training;
-    private Date fromDate;
-    private Date toDate;
+  @InjectMocks private TrainingDaoImpl trainingDao;
 
-    @BeforeEach
-    void setUp() {
-        training = new Training();
-        training.setId(1L);
-        training.setDate(new Date());
+  private Training training;
+  private Trainee trainee;
+  private Trainer trainer;
 
-        fromDate = new Date(System.currentTimeMillis() - 100000);
-        toDate = new Date(System.currentTimeMillis() + 100000);
-    }
+  @BeforeEach
+  void setUp() {
+    User traineeUser = new User();
+    traineeUser.setUsername("trainee1");
 
-    @Test
-    void testSave() {
-        trainingDao.save(training);
+    trainee = new Trainee();
+    trainee.setUser(traineeUser);
 
-        verify(entityManager, times(1)).persist(training);
-    }
+    User trainerUser = new User();
+    trainerUser.setUsername("trainer1");
+    trainerUser.setFirstName("John");
 
-    @Test
-    void testFindById() {
-        when(entityManager.find(Training.class, 1L)).thenReturn(training);
+    trainer = new Trainer();
+    trainer.setUser(trainerUser);
 
-        Optional<Training> result = trainingDao.findById(1L);
+    training = new Training();
+    training.setId(1L);
+    training.setTrainee(trainee);
+    training.setTrainer(trainer);
+    training.setDate(new Date());
+    var trainingType = new TrainingType();
+    trainingType.setName(TrainingType.Type.CARDIO);
+    training.setType(trainingType);
+  }
 
-        assertTrue(result.isPresent());
-        assertEquals(training, result.get());
-    }
+  @Test
+  void testFindAll() {
+    when(entityManager.createQuery("select tr from Training tr", Training.class)).thenReturn(query);
+    when(query.getResultList()).thenReturn(Collections.singletonList(training));
 
-    @Test
-    void testFindById_NotFound() {
-        when(entityManager.find(Training.class, 2L)).thenReturn(null);
+    List<Training> result = trainingDao.findAll();
 
-        Optional<Training> result = trainingDao.findById(2L);
+    assertThat(result).containsExactly(training);
+    verify(entityManager).createQuery("select tr from Training tr", Training.class);
+    verify(query).getResultList();
+  }
 
-        assertFalse(result.isPresent());
-    }
+  @Test
+  void testSave() {
+    trainingDao.save(training);
 
-    @Test
-    void testGetTrainingsByTraineeUsername() {
-        TypedQuery<Training> query = mock(TypedQuery.class);
-        when(entityManager.createQuery(anyString(), eq(Training.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.getResultList()).thenReturn(Arrays.asList(training));
+    ArgumentCaptor<Training> captor = ArgumentCaptor.forClass(Training.class);
+    verify(entityManager).persist(captor.capture());
+    assertThat(captor.getValue()).isEqualTo(training);
+  }
 
-        List<Training> trainings = trainingDao.getTrainingsByTraineeUsername("testUser", fromDate, toDate, "John");
+  @Test
+  void testFindById() {
+    when(entityManager.find(Training.class, 1L)).thenReturn(training);
 
-        assertEquals(1, trainings.size());
-        assertEquals(training, trainings.get(0));
-    }
+    Optional<Training> result = trainingDao.findById(1L);
 
-    @Test
-    void testGetTrainingsByTraineeUsername_WithNullParameters() {
-        TypedQuery<Training> query = mock(TypedQuery.class);
-        when(entityManager.createQuery(anyString(), eq(Training.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.getResultList()).thenReturn(Arrays.asList(training));
+    assertThat(result).isPresent().contains(training);
+    verify(entityManager).find(Training.class, 1L);
+  }
+  @Test
+  void testGetTrainingsByTraineeUsername() {
+    String username = "trainee1";
+    Date fromDate = new Date(System.currentTimeMillis() - 1000000);
+    Date toDate = new Date();
+    String trainerName = "John";
+    TrainingType trainingType = new TrainingType();
+    trainingType.setName(TrainingType.Type.CARDIO);
 
-        List<Training> trainings = trainingDao.getTrainingsByTraineeUsername("testUser", null, null, null);
+    when(entityManager.createQuery(anyString(), eq(Training.class))).thenReturn(query);
+    when(query.setParameter(eq("username"), eq(username))).thenReturn(query);
+    when(query.setParameter(eq("fromDate"), eq(fromDate), eq(TemporalType.DATE))).thenReturn(query);
+    when(query.setParameter(eq("toDate"), eq(toDate), eq(TemporalType.DATE))).thenReturn(query);
+    when(query.setParameter(eq("trainerName"), eq(trainerName))).thenReturn(query);
+    when(query.setParameter(eq("trainingType"), eq(trainingType))).thenReturn(query);
+    when(query.getResultList()).thenReturn(Collections.singletonList(training));
 
-        assertEquals(1, trainings.size());
-        assertEquals(training, trainings.get(0));
-    }
+    List<Training> result = trainingDao.getTrainingsByTraineeUsername(username, fromDate, toDate, trainerName, trainingType);
 
-    @Test
-    void testGetTrainingsByTrainerUsername() {
-        TypedQuery<Training> query = mock(TypedQuery.class);
-        when(entityManager.createQuery(anyString(), eq(Training.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.getResultList()).thenReturn(Arrays.asList(training));
+    assertThat(result).containsExactly(training);
+    verify(entityManager).createQuery(anyString(), eq(Training.class));
+    verify(query).getResultList();
+  }
 
-        List<Training> trainings = trainingDao.getTrainingsByTrainerUsername("trainerUser", fromDate, toDate, TrainingType.Type.CARDIO, "Jane");
+  @Test
+  void testGetTrainingsByTrainerUsername() {
+    String username = "trainer1";
+    Date fromDate = new Date(System.currentTimeMillis() - 1000000);
+    Date toDate = new Date();
+    String traineeName = "Trainee Name";
 
-        assertEquals(1, trainings.size());
-        assertEquals(training, trainings.get(0));
-    }
+    when(entityManager.createQuery(anyString(), eq(Training.class))).thenReturn(query);
+    when(query.setParameter(eq("username"), eq(username))).thenReturn(query);
+    when(query.setParameter(eq("fromDate"), eq(fromDate), eq(TemporalType.DATE))).thenReturn(query);
+    when(query.setParameter(eq("toDate"), eq(toDate), eq(TemporalType.DATE))).thenReturn(query);
+    when(query.setParameter(eq("traineeName"), eq(traineeName))).thenReturn(query);
+    when(query.getResultList()).thenReturn(Collections.singletonList(training));
 
-    @Test
-    void testGetTrainingsByTrainerUsername_WithNullParameters() {
-        TypedQuery<Training> query = mock(TypedQuery.class);
-        when(entityManager.createQuery(anyString(), eq(Training.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.getResultList()).thenReturn(Arrays.asList(training));
+    List<Training> result = trainingDao.getTrainingsByTrainerUsername(username, fromDate, toDate, traineeName);
 
-        List<Training> trainings = trainingDao.getTrainingsByTrainerUsername("trainerUser", null, null, null, null);
+    assertThat(result).containsExactly(training);
+    verify(entityManager).createQuery(anyString(), eq(Training.class));
+    verify(query).getResultList();
+  }
 
-        assertEquals(1, trainings.size());
-        assertEquals(training, trainings.get(0));
-    }
 }

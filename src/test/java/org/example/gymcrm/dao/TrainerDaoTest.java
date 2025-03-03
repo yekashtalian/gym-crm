@@ -126,15 +126,4 @@ class TrainerDaoTest {
         verify(trainerQuery, times(1)).getResultList();
     }
 
-    @Test
-    void testFindAll() {
-        when(entityManager.createQuery(anyString(), eq(Trainer.class))).thenReturn(trainerQuery);
-        when(trainerQuery.getResultList()).thenReturn(List.of(createTrainer("trainer1"), createTrainer("trainer2")));
-
-        List<Trainer> trainers = trainerDao.findAll();
-
-        assertThat(trainers).hasSize(2);
-        verify(entityManager, times(1)).createQuery(anyString(), eq(Trainer.class));
-        verify(trainerQuery, times(1)).getResultList();
-    }
 }

@@ -1,9 +1,26 @@
 package org.example.gymcrm.service;
 
-import org.example.gymcrm.dao.*;
-import org.example.gymcrm.dto.TrainingDTO;
-import org.example.gymcrm.entity.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import org.example.gymcrm.dao.TraineeDao;
+import org.example.gymcrm.dao.TrainerDao;
+import org.example.gymcrm.dao.TrainingDao;
+import org.example.gymcrm.dao.TrainingTypeDao;
+import org.example.gymcrm.dto.TraineeTrainingDto;
+import org.example.gymcrm.dto.TrainerTrainingDto;
+import org.example.gymcrm.dto.TrainingDto;
+import org.example.gymcrm.entity.Trainee;
+import org.example.gymcrm.entity.Trainer;
+import org.example.gymcrm.entity.Training;
+import org.example.gymcrm.entity.TrainingType;
+import org.example.gymcrm.exception.NotFoundException;
 import org.example.gymcrm.exception.TrainingServiceException;
+import org.example.gymcrm.mapper.TrainingMapper;
 import org.example.gymcrm.service.impl.TrainingServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,101 +29,145 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class TrainingServiceTest {
 
-    @Mock private TrainingDao trainingDao;
-    @Mock private TraineeDao traineeDao;
-    @Mock private TrainerDao trainerDao;
-    @Mock private TrainingTypeDao trainingTypeDao;
+  @Mock private TrainingDao trainingDao;
 
-    @InjectMocks private TrainingServiceImpl trainingService;
+  @Mock private TraineeDao traineeDao;
 
-    private Training training;
-    private Trainee trainee;
-    private Trainer trainer;
-    private TrainingType trainingType;
+  @Mock private TrainerDao trainerDao;
 
-    @BeforeEach
-    void setUp() {
-        trainee = new Trainee(new User("traineeUsername"));
-        trainer = new Trainer(new User("trainerUsername"));
-        trainingType = new TrainingType(TrainingType.Type.STRENGTH_TRAINING);
+  @Mock private TrainingTypeDao trainingTypeDao;
 
-        training = new Training();
-        training.setTrainee(trainee);
-        training.setTrainer(trainer);
-        training.setType(trainingType);
-        training.setName("Strength Training");
-        training.setDate(new Date());
-        training.setDuration(60);
-    }
+  @Mock private TrainingMapper trainingMapper;
 
-    @Test
-    void getAll_ShouldReturnListOfTrainings() {
-        when(trainingDao.findAll()).thenReturn(List.of(training));
+  @InjectMocks private TrainingServiceImpl trainingService;
 
-        List<TrainingDTO> result = trainingService.getAll();
+  private TrainingDto trainingDto;
+  private Training training;
+  private Trainer trainer;
+  private Trainee trainee;
+  private TrainingType trainingType;
 
-        assertEquals(1, result.size());
-        assertEquals("traineeUsername", result.get(0).getTraineeUsername());
-        assertEquals("trainerUsername", result.get(0).getTrainerUsername());
-    }
+  @BeforeEach
+  void setUp() {
+    trainer = new Trainer();
+    trainee = new Trainee();
+    trainingType = new TrainingType();
 
-    @Test
-    void save_ShouldSaveTrainingSuccessfully() {
-        when(traineeDao.findByUsername("traineeUsername")).thenReturn(Optional.of(trainee));
-        when(trainerDao.findByUsername("trainerUsername")).thenReturn(Optional.of(trainer));
-        when(trainingTypeDao.findByName(TrainingType.Type.STRENGTH_TRAINING)).thenReturn(Optional.of(trainingType));
+    trainingDto = new TrainingDto();
+    trainingDto.setTrainerUsername("trainerUser");
+    trainingDto.setTraineeUsername("traineeUser");
 
-        trainingService.save(training);
+    training = new Training();
+    training.setTrainer(trainer);
+    training.setTrainee(trainee);
+  }
 
-        verify(trainingDao, times(1)).save(training);
-    }
+  @Test
+  void testSave_Success() {
+    when(trainerDao.findByUsername("trainerUser")).thenReturn(Optional.of(trainer));
+    when(traineeDao.findByUsername("traineeUser")).thenReturn(Optional.of(trainee));
+    when(trainingMapper.toTraining(trainingDto)).thenReturn(training);
 
-    @Test
-    void save_ShouldThrowException_WhenTraineeNotFound() {
-        when(traineeDao.findByUsername("traineeUsername")).thenReturn(Optional.empty());
+    trainingService.save(trainingDto);
 
-        TrainingServiceException exception = assertThrows(TrainingServiceException.class,
-                () -> trainingService.save(training));
-        assertEquals("Trainee not found", exception.getMessage());
-    }
+    verify(trainingDao).save(training);
+    verify(trainerDao).findByUsername("trainerUser");
+    verify(traineeDao).findByUsername("traineeUser");
+  }
 
-    @Test
-    void save_ShouldThrowException_WhenTrainerNotFound() {
-        when(traineeDao.findByUsername("traineeUsername")).thenReturn(Optional.of(trainee));
-        when(trainerDao.findByUsername("trainerUsername")).thenReturn(Optional.empty());
+  @Test
+  void testSave_WhenTrainerNotFound_ThrowsException() {
+    when(trainerDao.findByUsername("trainerUser")).thenReturn(Optional.empty());
 
-        TrainingServiceException exception = assertThrows(TrainingServiceException.class,
-                () -> trainingService.save(training));
-        assertEquals("Trainer not found", exception.getMessage());
-    }
+    assertThatThrownBy(() -> trainingService.save(trainingDto))
+        .isInstanceOf(NotFoundException.class);
 
-    @Test
-    void getTrainingsByTraineeUsername_ShouldReturnTrainings() {
-        when(traineeDao.findByUsername("traineeUsername")).thenReturn(Optional.of(trainee));
-        when(trainingDao.getTrainingsByTraineeUsername(any(), any(), any(), any())).thenReturn(List.of(training));
+    verify(trainerDao).findByUsername("trainerUser");
+    verify(trainingDao, never()).save(any());
+  }
 
-        List<TrainingDTO> result = trainingService.getTrainingsByTraineeUsername("traineeUsername", new Date(), new Date(), "John");
+  @Test
+  void testSave_WhenTraineeNotFound_ThrowsException() {
+    when(trainerDao.findByUsername("trainerUser")).thenReturn(Optional.of(trainer));
+    when(traineeDao.findByUsername("traineeUser")).thenReturn(Optional.empty());
 
-        assertEquals(1, result.size());
-    }
+    assertThatThrownBy(() -> trainingService.save(trainingDto))
+        .isInstanceOf(NotFoundException.class);
 
-    @Test
-    void getTrainingsByTraineeUsername_ShouldThrowException_WhenTraineeNotFound() {
-        when(traineeDao.findByUsername("traineeUsername")).thenReturn(Optional.empty());
+    verify(trainerDao).findByUsername("trainerUser");
+    verify(traineeDao).findByUsername("traineeUser");
+    verify(trainingDao, never()).save(any());
+  }
 
-        assertThrows(TrainingServiceException.class,
-                () -> trainingService.getTrainingsByTraineeUsername("traineeUsername", new Date(), new Date(), "John"));
-    }
+  @Test
+  void testGetTrainingsByTraineeUsername_Success() {
+    Date fromDate = new Date();
+    Date toDate = new Date();
+    when(traineeDao.findByUsername("traineeUser")).thenReturn(Optional.of(trainee));
+    when(trainingTypeDao.findByName(any())).thenReturn(Optional.of(trainingType));
+    when(trainingDao.getTrainingsByTraineeUsername(
+            "traineeUser", fromDate, toDate, "trainerName", trainingType))
+        .thenReturn(List.of(training));
+    when(trainingMapper.toTraineeTrainingsDto(training)).thenReturn(new TraineeTrainingDto());
+
+    List<TraineeTrainingDto> result =
+        trainingService.getTrainingsByTraineeUsername(
+            "traineeUser", fromDate, toDate, "trainerName", "STRENGTH_TRAINING");
+
+    assertThat(result).hasSize(1);
+    verify(traineeDao).findByUsername("traineeUser");
+    verify(trainingDao)
+        .getTrainingsByTraineeUsername(
+            "traineeUser", fromDate, toDate, "trainerName", trainingType);
+  }
+
+  @Test
+  void testGetTrainingsByTraineeUsername_WhenTraineeNotFound_ThrowsException() {
+    when(traineeDao.findByUsername("traineeUser")).thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+            () ->
+                trainingService.getTrainingsByTraineeUsername(
+                    "traineeUser", null, null, null, null))
+        .isInstanceOf(NotFoundException.class)
+        .hasMessage("Trainee not found");
+
+    verify(traineeDao).findByUsername("traineeUser");
+    verify(trainingDao, never()).getTrainingsByTraineeUsername(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  void testGetTrainingsByTrainerUsername_Success() {
+    Date fromDate = new Date();
+    Date toDate = new Date();
+    when(trainerDao.findByUsername("trainerUser")).thenReturn(Optional.of(trainer));
+    when(trainingDao.getTrainingsByTrainerUsername("trainerUser", fromDate, toDate, "traineeName"))
+        .thenReturn(List.of(training));
+    when(trainingMapper.toTrainerTrainingsDto(training)).thenReturn(new TrainerTrainingDto());
+
+    List<TrainerTrainingDto> result =
+        trainingService.getTrainingsByTrainerUsername(
+            "trainerUser", fromDate, toDate, "traineeName");
+
+    assertThat(result).hasSize(1);
+    verify(trainerDao).findByUsername("trainerUser");
+    verify(trainingDao)
+        .getTrainingsByTrainerUsername("trainerUser", fromDate, toDate, "traineeName");
+  }
+
+  @Test
+  void testGetTrainingsByTrainerUsername_WhenTrainerNotFound_ThrowsException() {
+    when(trainerDao.findByUsername("trainerUser")).thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+            () -> trainingService.getTrainingsByTrainerUsername("trainerUser", null, null, null))
+        .isInstanceOf(NotFoundException.class)
+        .hasMessage("Trainer not found");
+
+    verify(trainerDao).findByUsername("trainerUser");
+    verify(trainingDao, never()).getTrainingsByTrainerUsername(any(), any(), any(), any());
+  }
 }
-
-

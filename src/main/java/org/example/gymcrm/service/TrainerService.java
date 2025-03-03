@@ -2,23 +2,20 @@ package org.example.gymcrm.service;
 
 import java.util.List;
 
-import org.example.gymcrm.dto.TrainerProfileDTO;
+import org.example.gymcrm.dto.RegisterTrainerRequestDto;
+import org.example.gymcrm.dto.RegisterTrainerResponseDto;
+import org.example.gymcrm.dto.TrainerProfileDto;
+import org.example.gymcrm.dto.UpdateTrainerRequestDto;
 import org.example.gymcrm.entity.Trainer;
 
 public interface TrainerService {
-  void save(Trainer trainer);
+  RegisterTrainerResponseDto save(RegisterTrainerRequestDto trainer);
 
-  void update(Long id, Trainer trainer);
+  TrainerProfileDto update(String username, UpdateTrainerRequestDto trainer);
 
-  List<TrainerProfileDTO> getAll();
+  TrainerProfileDto findByUsername(String username);
 
-  TrainerProfileDTO findByUsername(String username);
+  void changeStatus(String username);
 
-  void changePassword(String oldPassword, String newPassword, String username);
-
-  void changeStatus(Long id);
-
-  List<Trainer> getUnassignedTrainers(String username);
-
-  boolean authenticate(String username, String password);
+  List<TrainerProfileDto> getUnassignedTrainers(String username);
 }

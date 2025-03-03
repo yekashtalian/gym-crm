@@ -3,18 +3,19 @@ package org.example.gymcrm.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.dao.TrainerDao;
 import org.example.gymcrm.dao.TrainingTypeDao;
-import org.example.gymcrm.dto.TrainerProfileDTO;
+import org.example.gymcrm.dto.*;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.entity.User;
-import org.example.gymcrm.exception.AuthenticationException;
+import org.example.gymcrm.exception.NotFoundException;
 import org.example.gymcrm.exception.TrainerServiceException;
+import org.example.gymcrm.mapper.TrainerMapper;
 import org.example.gymcrm.service.impl.TrainerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,161 +25,173 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class TrainerServiceTest {
+public class TrainerServiceTest {
 
-    @Mock
-    private TrainerDao trainerDao;
+  @Mock private TrainerDao trainerDao;
 
-    @Mock
-    private TraineeDao traineeDao;
+  @Mock private TraineeDao traineeDao;
 
-    @Mock
-    private TrainingTypeDao trainingTypeDao;
+  @Mock private TrainingTypeDao trainingTypeDao;
 
-    @InjectMocks
-    private TrainerServiceImpl trainerService;
+  @Mock private TrainerMapper trainerMapper;
 
-    private Trainer trainer;
-    private User user;
-    private TrainingType specialization;
+  @InjectMocks private TrainerServiceImpl trainerService;
 
-    @BeforeEach
-    void setUp() {
-        user = new User();
-        user.setFirstName("John");
-        user.setLastName("Doe");
-        user.setUsername("johndoe");
-        user.setPassword("password");
-        user.setActive(true);
+  private Trainer trainer;
+  private User user;
+  private TrainingType trainingType;
+  private RegisterTrainerRequestDto registerTrainerRequestDto;
+  private RegisterTrainerResponseDto registerTrainerResponseDto;
+  private UpdateTrainerRequestDto updateTrainerRequestDto;
+  private TrainerProfileDto trainerProfileDto;
 
-        specialization = new TrainingType();
-        specialization.setName(TrainingType.Type.STRENGTH_TRAINING);
+  @BeforeEach
+  void setUp() {
+    user = new User();
+    user.setFirstName("John");
+    user.setLastName("Doe");
+    user.setUsername("john.doe");
+    user.setPassword("password");
+    user.setActive(true);
 
-        trainer = new Trainer();
-        trainer.setId(1L);
-        trainer.setUser(user);
-        trainer.setSpecialization(specialization);
-    }
+    trainingType = new TrainingType();
+    trainingType.setId(1L);
+    trainingType.setName(TrainingType.Type.CARDIO);
 
-    @Test
-    void testSave_NewTrainer() {
-        when(trainingTypeDao.findByName(any())).thenReturn(Optional.of(specialization));
-        doNothing().when(trainerDao).save(any());
-        when(traineeDao.findUsernames()).thenReturn(List.of());
-        when(trainerDao.findUsernames()).thenReturn(List.of());
+    trainer = new Trainer();
+    trainer.setUser(user);
+    trainer.setSpecialization(trainingType);
 
-        trainer.setId(null);
-        trainerService.save(trainer);
+    registerTrainerRequestDto = new RegisterTrainerRequestDto();
+    registerTrainerRequestDto.setFirstName("John");
+    registerTrainerRequestDto.setLastName("Doe");
+    registerTrainerRequestDto.setSpecializationId(1L);
 
-        verify(trainerDao).save(any());
-    }
+    registerTrainerResponseDto = new RegisterTrainerResponseDto();
+    registerTrainerResponseDto.setUsername("john.doe");
 
-    @Test
-    void testSave_ExistingTrainer() {
-        when(trainingTypeDao.findByName(any())).thenReturn(Optional.of(specialization));
-        doNothing().when(trainerDao).update(any());
+    updateTrainerRequestDto = new UpdateTrainerRequestDto();
+    updateTrainerRequestDto.setFirstName("Jane");
+    updateTrainerRequestDto.setLastName("Doe");
+    updateTrainerRequestDto.setActive(false);
 
-        trainerService.save(trainer);
+    trainerProfileDto = new TrainerProfileDto();
+    trainerProfileDto.setUsername("john.doe");
+    trainerProfileDto.setFirstName("John");
+    trainerProfileDto.setLastName("Doe");
+    trainerProfileDto.setSpecialization(1L);
+    trainerProfileDto.setActive(true);
+  }
 
-        verify(trainerDao).update(any());
-    }
+  @Test
+  void testSave() {
+    when(trainerMapper.registerDtoToUser(registerTrainerRequestDto)).thenReturn(user);
+    when(trainingTypeDao.findById(1L)).thenReturn(Optional.of(trainingType));
+    when(traineeDao.findUsernames()).thenReturn(Collections.emptyList());
+    when(trainerDao.findUsernames()).thenReturn(Collections.emptyList());
+    when(trainerDao.save(any(Trainer.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(trainerMapper.trainerToDto(any(User.class))).thenReturn(registerTrainerResponseDto);
 
-    @Test
-    void testUpdate_Success() {
-        when(trainerDao.findById(anyLong())).thenReturn(Optional.of(trainer));
-        when(trainingTypeDao.findByName(any())).thenReturn(Optional.of(specialization));
-        doNothing().when(trainerDao).update(any());
+    RegisterTrainerResponseDto response = trainerService.save(registerTrainerRequestDto);
 
-        Trainer updatedTrainer = new Trainer();
-        updatedTrainer.setUser(new User());
-        updatedTrainer.getUser().setFirstName("Jane");
-        updatedTrainer.getUser().setLastName("Smith");
-        updatedTrainer.getUser().setUsername("janesmith");
-        updatedTrainer.setSpecialization(specialization);
+    assertNotNull(response);
+    assertEquals("john.doe", response.getUsername());
 
-        trainerService.update(1L, updatedTrainer);
+    verify(trainerDao, times(1)).save(any(Trainer.class));
+    verify(trainerMapper, times(1)).trainerToDto(any(User.class));
+    verify(trainingTypeDao, times(1)).findById(1L);
+    verify(traineeDao, times(1)).findUsernames();
+    verify(trainerDao, times(1)).findUsernames();
+  }
 
-        verify(trainerDao).update(any());
-        assertEquals("Jane", trainer.getUser().getFirstName());
-    }
 
-    @Test
-    void testUpdate_TrainerNotFound() {
-        when(trainerDao.findById(anyLong())).thenReturn(Optional.empty());
+  @Test
+  void testSave_SpecializationNotFound() {
+    when(trainerMapper.registerDtoToUser(registerTrainerRequestDto)).thenReturn(user);
+    when(trainingTypeDao.findById(1L)).thenReturn(Optional.empty());
 
-        Trainer updatedTrainer = new Trainer();
-        assertThrows(TrainerServiceException.class, () -> trainerService.update(1L, updatedTrainer));
-    }
+    assertThrows(
+        TrainerServiceException.class, () -> trainerService.save(registerTrainerRequestDto));
+  }
 
-    @Test
-    void testFindByUsername_Success() {
-        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.of(trainer));
+  @Test
+  void testUpdate() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
+    when(trainerDao.update(trainer)).thenReturn(trainer);
+    when(trainerMapper.toProfileDto(trainer)).thenReturn(trainerProfileDto);
 
-        TrainerProfileDTO result = trainerService.findByUsername("johndoe");
+    TrainerProfileDto response = trainerService.update("john.doe", updateTrainerRequestDto);
 
-        assertNotNull(result);
-        assertEquals("John", result.getFirstName());
-    }
+    assertNotNull(response);
+    assertEquals("john.doe", response.getUsername());
+    verify(trainerDao, times(1)).update(trainer);
+  }
 
-    @Test
-    void testFindByUsername_NotFound() {
-        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.empty());
+  @Test
+  void testUpdate_TrainerNotFound() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-        assertThrows(TrainerServiceException.class, () -> trainerService.findByUsername("unknown"));
-    }
+    assertThrows(
+        NotFoundException.class,
+        () -> trainerService.update("john.doe", updateTrainerRequestDto));
+  }
 
-    @Test
-    void testChangePassword_Success() {
-        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.of(trainer));
+  @Test
+  void testFindByUsername() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
+    when(trainerMapper.toProfileDto(trainer)).thenReturn(trainerProfileDto);
 
-        trainerService.changePassword("password", "newpassword", "johndoe");
+    TrainerProfileDto response = trainerService.findByUsername("john.doe");
 
-        assertEquals("newpassword", trainer.getUser().getPassword());
-    }
+    assertNotNull(response);
+    assertEquals("john.doe", response.getUsername());
+  }
 
-    @Test
-    void testChangePassword_InvalidOldPassword() {
-        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.of(trainer));
+  @Test
+  void testFindByUsername_TrainerNotFound() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-        assertThrows(TrainerServiceException.class, () -> trainerService.changePassword("wrong", "newpassword", "johndoe"));
-    }
+    assertThrows(NotFoundException.class, () -> trainerService.findByUsername("john.doe"));
+  }
 
-    @Test
-    void testChangeStatus_Success() {
-        when(trainerDao.findById(anyLong())).thenReturn(Optional.of(trainer));
+  @Test
+  void testChangeStatus() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
 
-        trainerService.changeStatus(1L);
+    trainerService.changeStatus("john.doe");
 
-        assertFalse(trainer.getUser().isActive());
-    }
+    assertFalse(trainer.getUser().isActive());
+    verify(trainerDao, times(1)).findByUsername("john.doe");
+  }
 
-    @Test
-    void testGetUnassignedTrainers_Success() {
-        when(trainerDao.findUnassignedTrainersByTraineeUsername(anyString())).thenReturn(List.of(trainer));
+  @Test
+  void testChangeStatus_TrainerNotFound() {
+    when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
 
-        List<Trainer> trainers = trainerService.getUnassignedTrainers("johndoe");
+    assertThrows(NotFoundException.class, () -> trainerService.changeStatus("john.doe"));
+  }
 
-        assertEquals(1, trainers.size());
-    }
+  @Test
+  void testGetUnassignedTrainers() {
+    when(traineeDao.findByUsername("trainee.username"))
+        .thenReturn(Optional.of(new org.example.gymcrm.entity.Trainee()));
+    when(trainerDao.findUnassignedTrainersByTraineeUsername("trainee.username"))
+        .thenReturn(Collections.singletonList(trainer));
+    when(trainerMapper.toProfileDtoForUnassigned(trainer)).thenReturn(trainerProfileDto);
 
-    @Test
-    void testGetUnassignedTrainers_EmptyList() {
-        when(trainerDao.findUnassignedTrainersByTraineeUsername(anyString())).thenReturn(List.of());
+    List<TrainerProfileDto> response = trainerService.getUnassignedTrainers("trainee.username");
 
-        assertThrows(TrainerServiceException.class, () -> trainerService.getUnassignedTrainers("johndoe"));
-    }
+    assertNotNull(response);
+    assertEquals(1, response.size());
+    assertEquals("john.doe", response.get(0).getUsername());
+  }
 
-    @Test
-    void testAuthenticate_Success() {
-        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.of(trainer));
+  @Test
+  void testGetUnassignedTrainers_TraineeNotFound() {
+    when(traineeDao.findByUsername("trainee.username")).thenReturn(Optional.empty());
 
-        assertTrue(trainerService.authenticate("johndoe", "password"));
-    }
-
-    @Test
-    void testAuthenticate_InvalidCredentials() {
-        when(trainerDao.findByUsername(anyString())).thenReturn(Optional.of(trainer));
-
-        assertThrows(AuthenticationException.class, () -> trainerService.authenticate("johndoe", "wrong"));
-    }
+    assertThrows(
+        NotFoundException.class,
+        () -> trainerService.getUnassignedTrainers("trainee.username"));
+  }
 }

@@ -7,16 +7,17 @@ import java.util.List;
 import java.util.Optional;
 import org.example.gymcrm.dao.TraineeDao;
 import org.example.gymcrm.entity.Trainee;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class TraineeDaoImpl implements TraineeDao {
-  @PersistenceContext @Autowired private EntityManager entityManager;
+  @PersistenceContext private EntityManager entityManager;
 
   @Override
-  public void save(Trainee trainee) {
+  public Trainee save(Trainee trainee) {
     entityManager.persist(trainee);
+    return trainee;
   }
 
   @Override
@@ -33,7 +34,7 @@ public class TraineeDaoImpl implements TraineeDao {
     Trainee trainee =
         entityManager
             .createQuery(
-                "SELECT tr FROM Trainee tr WHERE tr.user.username = :username", Trainee.class)
+                "SELECT tr FROM Trainee tr join fetch tr.user where tr.user.username = :username", Trainee.class)
             .setParameter("username", username)
             .getSingleResult();
 
@@ -63,16 +64,7 @@ public class TraineeDaoImpl implements TraineeDao {
   }
 
   @Override
-  public void update(Trainee trainee) {
-    entityManager.merge(trainee);
-  }
-
-  @Override
-  public List<Trainee> findAll() {
-    var trainees =
-        entityManager
-            .createQuery("select tr from Trainee tr join fetch tr.user", Trainee.class)
-            .getResultList();
-    return trainees;
+  public Trainee update(Trainee trainee) {
+    return entityManager.merge(trainee);
   }
 }

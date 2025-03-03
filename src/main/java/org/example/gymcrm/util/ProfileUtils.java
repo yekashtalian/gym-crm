@@ -8,7 +8,7 @@ import org.example.gymcrm.exception.ProfileUtilsException;
 public class ProfileUtils {
   private static final int PASSWORD_LENGTH = 10;
   private static final String PASSWORD_CHARACTERS =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_+=<>?";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$^*()-_";
   private static final Random RANDOM = new Random();
 
   public static String generateUsername(
@@ -64,15 +64,5 @@ public class ProfileUtils {
     }
 
     return password.toString();
-  }
-
-  public static void validateFirstAndLastName(String firstName, String lastName) {
-    if (isNullOrEmpty(firstName) || isNullOrEmpty(lastName)) {
-      throw new ProfileUtilsException("First or Last name cannot be empty or null");
-    }
-  }
-
-  private static boolean isNullOrEmpty(String str) {
-    return str == null || str.isEmpty();
   }
 }
