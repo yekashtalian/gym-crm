@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gymcrm_prod
+    username: prod_user
+    password: produser

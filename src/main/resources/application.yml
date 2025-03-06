@@ -13,8 +13,6 @@ spring:
 # Server configuration
 server:
   port: 8082
-  servlet:
-    context-path: /gym-crm
 
 # Swagger UI
 springdoc:
@@ -33,26 +31,23 @@ info:
   git:
     branch: ${git.branch}
     commit: ${git.commit.id}
-#
-## Spring Actuator
-#management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: info, health
-#  endpoint:
-#    health:
-#      enabled: true
-#      show-details: always
-#  info:
-#    git:
-#      enabled: true
-#    env:
-#      enabled: true
-## Logbook
-#logging:
-#  level:
-#    org:
-#      zalando:
-#        logbook:
-#          Logbook: INFO
+
+# Spring Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health, prometheus, metrics
+  health:
+    db:
+      enabled: false
+    diskspace:
+      enabled: false
+  info:
+    git:
+      enabled: true
+    env:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always
