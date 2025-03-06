@@ -74,6 +74,7 @@ public class TrainerServiceTest {
     updateTrainerRequestDto.setFirstName("Jane");
     updateTrainerRequestDto.setLastName("Doe");
     updateTrainerRequestDto.setActive(false);
+    updateTrainerRequestDto.setSpecializationId(1L);
 
     trainerProfileDto = new TrainerProfileDto();
     trainerProfileDto.setUsername("john.doe");
@@ -117,6 +118,7 @@ public class TrainerServiceTest {
   @Test
   void testUpdate() {
     when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
+    when(trainingTypeDao.findById(updateTrainerRequestDto.getSpecializationId())).thenReturn(Optional.of(trainingType));
     when(trainerDao.update(trainer)).thenReturn(trainer);
     when(trainerMapper.toProfileDto(trainer)).thenReturn(trainerProfileDto);
 

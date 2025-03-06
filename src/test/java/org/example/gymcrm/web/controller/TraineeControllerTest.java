@@ -1,43 +1,33 @@
 package org.example.gymcrm.web.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.gymcrm.dto.*;
-import org.example.gymcrm.service.TraineeService;
-import org.example.gymcrm.service.TrainingService;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.util.Date;
-import java.util.List;
-
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-public class TraineeControllerTest {
-  private MockMvc mockMvc;
-  private ObjectMapper objectMapper;
-  @Mock private TraineeService traineeService;
-  @Mock private TrainingService trainingService;
-  @InjectMocks private TraineeController traineeController;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Date;
+import java.util.List;
+import org.example.gymcrm.dto.*;
+import org.example.gymcrm.service.TraineeService;
+import org.example.gymcrm.service.TrainingService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
-  @BeforeEach
-  public void setUp() {
-    mockMvc = MockMvcBuilders.standaloneSetup(traineeController).build();
-    objectMapper = new ObjectMapper();
-  }
+@WebMvcTest(controllers = TraineeController.class)
+@ExtendWith(MockitoExtension.class)
+public class TraineeControllerTest {
+  @Autowired private MockMvc mockMvc;
+  @Autowired private ObjectMapper objectMapper;
+  @MockitoBean private TraineeService traineeService;
+  @MockitoBean private TrainingService trainingService;
+  @Autowired private TraineeController traineeController;
 
   @Test
   public void getTrainee() throws Exception {
@@ -195,17 +185,17 @@ public class TraineeControllerTest {
     List<TraineeTrainersDto> responseDto = List.of(trainer1, trainer2);
 
     when(traineeService.updateTraineeTrainers(eq(username), any(UpdateTrainersDto.class)))
-            .thenReturn(responseDto);
+        .thenReturn(responseDto);
 
     mockMvc
-            .perform(
-                    put("/api/v1/trainee/{username}/trainers", username)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(updateTrainersDto)))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.size()").value(2))
-            .andExpect(jsonPath("$[0].username").value("trainer1"))
-            .andExpect(jsonPath("$[1].username").value("trainer2"));
+        .perform(
+            put("/api/v1/trainee/{username}/trainers", username)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateTrainersDto)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.size()").value(2))
+        .andExpect(jsonPath("$[0].username").value("trainer1"))
+        .andExpect(jsonPath("$[1].username").value("trainer2"));
 
     verify(traineeService).updateTraineeTrainers(eq(username), any(UpdateTrainersDto.class));
   }

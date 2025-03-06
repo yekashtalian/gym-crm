@@ -1,44 +1,35 @@
 package org.example.gymcrm.web.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.gymcrm.dto.*;
-import org.example.gymcrm.service.TrainerService;
-import org.example.gymcrm.service.TrainingService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.util.Date;
-import java.util.List;
-
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Date;
+import java.util.List;
+import org.example.gymcrm.dto.*;
+import org.example.gymcrm.service.TrainerService;
+import org.example.gymcrm.service.TrainingService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+@WebMvcTest(controllers = TrainerController.class)
+@ExtendWith(MockitoExtension.class)
 public class TrainerControllerTest {
-  private MockMvc mockMvc;
-  private ObjectMapper objectMapper;
+  @Autowired private MockMvc mockMvc;
+  @Autowired private ObjectMapper objectMapper;
 
-  @Mock private TrainerService trainerService;
+  @MockitoBean private TrainerService trainerService;
 
-  @Mock private TrainingService trainingService;
+  @MockitoBean private TrainingService trainingService;
 
-  @InjectMocks private TrainerController trainerController;
-
-  @BeforeEach
-  public void setUp() {
-    mockMvc = MockMvcBuilders.standaloneSetup(trainerController).build();
-    objectMapper = new ObjectMapper();
-  }
+  @Autowired private TrainerController trainerController;
 
   @Test
   public void getTrainer() throws Exception {
