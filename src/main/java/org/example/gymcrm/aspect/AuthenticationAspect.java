@@ -8,6 +8,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.example.gymcrm.exception.UnauthorizedException;
 import org.example.gymcrm.service.UserService;
+import org.example.gymcrm.metric.FailedLoginMetric;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Slf4j
 public class AuthenticationAspect {
   private final UserService userService;
+  private final FailedLoginMetric failedLoginMetric;
 
   @SuppressWarnings("ConstantValue")
   @Around("@annotation(org.example.gymcrm.aspect.RequiresAuthentication)")
@@ -35,6 +37,7 @@ public class AuthenticationAspect {
 
     if (username == null || password == null) {
       log.warn("Missing authentication headers");
+      failedLoginMetric.incrementFailedLogin();
       throw new UnauthorizedException("Missing authentication headers");
     }
 
@@ -42,6 +45,7 @@ public class AuthenticationAspect {
     var isAuthenticated = userService.validateCredentials(username, password);
     if (!isAuthenticated) {
       log.warn("Authentication failed for user: {}", username);
+      failedLoginMetric.incrementFailedLogin();
       throw new UnauthorizedException("Invalid credentials");
     }
 

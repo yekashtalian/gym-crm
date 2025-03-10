@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: Gym-CRM
+  # Database
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/gym-crm
+    username: postgres
+    password: postgres
+  # JSON Non-Null
+  jackson:
+    default-property-inclusion: non_null
+# Server configuration
+server:
+  port: 8082
+
+# Swagger UI
+springdoc:
+  swagger-ui:
+    url: openapi.yml
+    path: /
+  api-docs:
+    path: /api-docs
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: "A Gym-CRM application"
+  java:
+    version: ${java.version}
+  git:
+    branch: ${git.branch}
+    commit: ${git.commit.id}
+
+# Spring Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health, prometheus, metrics
+  health:
+    db:
+      enabled: false
+    diskspace:
+      enabled: false
+  info:
+    git:
+      enabled: true
+    env:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always

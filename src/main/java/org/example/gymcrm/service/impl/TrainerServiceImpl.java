@@ -53,12 +53,13 @@ public class TrainerServiceImpl implements TrainerService {
   }
 
   private void assignGeneratedCredentials(Trainer trainer) {
-    logger.info("Assigning credentials for trainer: {}", trainer.getUser().getUsername());
     var usernames = mergeAllUsernames(traineeDao.findUsernames(), trainerDao.findUsernames());
     var user = trainer.getUser();
 
     user.setUsername(generateUsername(user.getFirstName(), user.getLastName(), usernames));
     user.setPassword(generateRandomPassword());
+
+    logger.info("Successfully assigned credentials for new trainer");
   }
 
   private TrainingType getTrainingType(Long specializationId) {
@@ -105,7 +106,7 @@ public class TrainerServiceImpl implements TrainerService {
             .findById(id)
             .orElseThrow(
                 () -> {
-                  logger.error("Spicialization with {} not found", id);
+                  logger.error("Spicialization with id: {} not found", id);
                   return new TrainerServiceException("Specialization not found");
                 });
     trainer.setSpecialization(specialization);

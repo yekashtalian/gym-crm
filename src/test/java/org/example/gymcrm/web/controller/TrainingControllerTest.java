@@ -1,40 +1,31 @@
 package org.example.gymcrm.web.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.gymcrm.dto.TrainingDto;
-import org.example.gymcrm.service.TrainingService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.util.Date;
-
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Date;
+import org.example.gymcrm.dto.TrainingDto;
+import org.example.gymcrm.service.TrainingService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+@WebMvcTest(controllers = TrainingController.class)
+@ExtendWith(MockitoExtension.class)
 public class TrainingControllerTest {
-  private MockMvc mockMvc;
-  private ObjectMapper objectMapper;
+  @Autowired private MockMvc mockMvc;
+  @Autowired private ObjectMapper objectMapper;
 
-  @Mock private TrainingService trainingService;
+  @MockitoBean private TrainingService trainingService;
 
-  @InjectMocks private TrainingController trainingController;
-
-  @BeforeEach
-  public void setUp() {
-    mockMvc = MockMvcBuilders.standaloneSetup(trainingController).build();
-    objectMapper = new ObjectMapper();
-  }
+  @Autowired private TrainingController trainingController;
 
   @Test
   public void saveTraining() throws Exception {
@@ -47,7 +38,6 @@ public class TrainingControllerTest {
             .duration(60)
             .build();
     var trainingJson = objectMapper.writeValueAsString(trainingDto);
-
 
     mockMvc
         .perform(

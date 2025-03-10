@@ -1,13 +1,11 @@
-//package org.example;
-//
-//import org.example.gymcrm.config.AppConfig;
-//import org.example.gymcrm.ui.Menu;
-//import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-//
-//public class GymApplication {
-//  public static void main(String[] args) {
-//    var context = new AnnotationConfigApplicationContext(AppConfig.class);
-//    var menu = context.getBean(Menu.class);
-//    menu.displayMenu();
-//  }
-//}
+package org.example;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class GymApplication {
+  public static void main(String[] args) {
+    SpringApplication.run(GymApplication.class, args);
+  }
+}

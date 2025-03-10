@@ -52,13 +52,13 @@ public class TraineeServiceImpl implements TraineeService {
   }
 
   private void assignGeneratedCredentials(Trainee trainee) {
-    logger.info("Assigning credentials for trainee: {}", trainee.getUser().getUsername());
-
     var usernames = mergeAllUsernames(traineeDao.findUsernames(), trainerDao.findUsernames());
     var user = trainee.getUser();
 
     user.setUsername(generateUsername(user.getFirstName(), user.getLastName(), usernames));
     user.setPassword(generateRandomPassword());
+
+    logger.info("Successfully assigned credentials for new trainee");
   }
 
   @Transactional
