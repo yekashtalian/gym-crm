@@ -1,5 +1,6 @@
 package org.example.gymcrm.indicator;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
@@ -10,15 +11,19 @@ import java.io.File;
 public class DiscSpaceHealthIndicator implements HealthIndicator {
 
   private static final long THRESHOLD = 500 * 1024 * 1024;
-  private final File disk;
+  private final File file;
 
-  public DiscSpaceHealthIndicator(File disk) {
-    this.disk = disk != null ? disk : new File("/");
+  public DiscSpaceHealthIndicator() {
+    this(new File("/"));
+  }
+
+  public DiscSpaceHealthIndicator(File file) {
+    this.file = file;
   }
 
   @Override
   public Health health() {
-    long freeSpace = disk.getFreeSpace();
+    long freeSpace = file.getFreeSpace();
 
     if (freeSpace > THRESHOLD) {
       return Health.up()
