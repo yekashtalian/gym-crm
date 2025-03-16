@@ -3,19 +3,17 @@ package org.example.gymcrm.web.advice;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 import org.example.gymcrm.dto.ErrorDetail;
 import org.example.gymcrm.dto.ErrorResponse;
 import org.example.gymcrm.exception.*;
-import org.example.gymcrm.service.TrainingTypeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.time.LocalDateTime;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -86,7 +84,6 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleJsonParseException(
       HttpMessageNotReadableException ex) {
     String errorMessage = "Invalid request format. Please check your input.";
-
     if (ex.getCause() instanceof InvalidFormatException invalidFormatException) {
       if (invalidFormatException.getTargetType() == java.util.Date.class) {
         errorMessage = "Invalid date format. Use yyyy-MM-dd.";

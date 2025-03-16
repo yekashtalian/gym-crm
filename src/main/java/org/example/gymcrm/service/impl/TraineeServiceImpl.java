@@ -20,6 +20,7 @@ import org.example.gymcrm.mapper.TraineeMapper;
 import org.example.gymcrm.service.TraineeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ public class TraineeServiceImpl implements TraineeService {
   private final TraineeDao traineeDao;
   private final TrainerDao trainerDao;
   private final TraineeMapper traineeMapper;
+  private final PasswordEncoder passwordEncoder;
 
   @Transactional
   @Override
@@ -41,22 +43,25 @@ public class TraineeServiceImpl implements TraineeService {
     var trainee = traineeMapper.registerDtoToTrainee(traineeRequestDto);
 
     trainee.setUser(user);
-    assignGeneratedCredentials(trainee);
+
+    var rawPassword = generateRandomPassword();
+    assignGeneratedCredentials(trainee, rawPassword);
 
     var savedTrainee = traineeDao.save(trainee);
     var responseDto = traineeMapper.traineeToDto(savedTrainee.getUser());
+    responseDto.setPassword(rawPassword);
 
     logger.info("Successfully registered trainee with username: {}", responseDto.getUsername());
 
     return responseDto;
   }
 
-  private void assignGeneratedCredentials(Trainee trainee) {
+  private void assignGeneratedCredentials(Trainee trainee, String passwordToEncode) {
     var usernames = mergeAllUsernames(traineeDao.findUsernames(), trainerDao.findUsernames());
     var user = trainee.getUser();
 
     user.setUsername(generateUsername(user.getFirstName(), user.getLastName(), usernames));
-    user.setPassword(generateRandomPassword());
+    user.setPassword(passwordEncoder.encode(passwordToEncode));
 
     logger.info("Successfully assigned credentials for new trainee");
   }

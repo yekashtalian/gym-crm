@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
-import org.example.gymcrm.aspect.RequiresAuthentication;
 import org.example.gymcrm.dto.*;
 import org.example.gymcrm.service.TraineeService;
 import org.example.gymcrm.service.TrainingService;
@@ -25,7 +24,6 @@ public class TraineeController {
   private final TraineeService traineeService;
   private final TrainingService trainingService;
 
-  @RequiresAuthentication
   @GetMapping("/trainee/{username}")
   public ResponseEntity<TraineeProfileDto> getTrainee(@PathVariable("username") String username) {
     var traineeProfile = traineeService.findByUsername(username);
@@ -39,7 +37,6 @@ public class TraineeController {
     return ResponseEntity.ok(registeredTrainee);
   }
 
-  @RequiresAuthentication
   @PutMapping("/trainee/{username}")
   public ResponseEntity<TraineeProfileDto> updateTrainee(
       @PathVariable("username") String username,
@@ -48,14 +45,12 @@ public class TraineeController {
     return ResponseEntity.ok(traineeProfile);
   }
 
-  @RequiresAuthentication
   @DeleteMapping("/trainee/{username}")
   public ResponseEntity<Void> deleteTrainee(@PathVariable("username") String username) {
     traineeService.deleteByUsername(username);
     return ResponseEntity.ok().build();
   }
 
-  @RequiresAuthentication
   @GetMapping("/trainee/{username}/trainings")
   public ResponseEntity<List<TraineeTrainingDto>> getTraineeTrainings(
       @PathVariable("username") String username,
@@ -71,7 +66,6 @@ public class TraineeController {
     return ResponseEntity.ok(traineeTrainings);
   }
 
-  @RequiresAuthentication
   @PutMapping("/trainee/{username}/trainers")
   public ResponseEntity<List<TraineeTrainersDto>> updateTraineeTrainersList(
       @PathVariable("username") String username,
@@ -80,7 +74,6 @@ public class TraineeController {
     return ResponseEntity.ok(traineeTrainers);
   }
 
-  @RequiresAuthentication
   @PatchMapping("/trainee/{username}/status")
   public ResponseEntity<Void> changeStatus(@PathVariable("username") String username) {
     traineeService.changeStatus(username);

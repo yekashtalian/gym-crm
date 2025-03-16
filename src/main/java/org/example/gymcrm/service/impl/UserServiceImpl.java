@@ -2,27 +2,30 @@ package org.example.gymcrm.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.UserDao;
+import org.example.gymcrm.exception.AuthenticationException;
+import org.example.gymcrm.exception.BruteForceException;
 import org.example.gymcrm.exception.NotFoundException;
 import org.example.gymcrm.exception.UserServiceException;
 import org.example.gymcrm.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService, UserDetailsService {
   private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
   private final UserDao userDao;
-
-  @Transactional
-  @Override
-  public boolean validateCredentials(String username, String password) {
-    var isAuthenticated =
-        userDao.findByUsername(username).map(u -> u.getPassword().equals(password)).orElse(false);
-    return isAuthenticated;
-  }
+  private final LoginAttemptService loginAttemptService;
 
   @Transactional
   @Override
@@ -47,5 +50,23 @@ public class UserServiceImpl implements UserService {
     }
     existingUser.setPassword(newPassword);
     logger.info("Password changed successfully for user: {}", username);
+  }
+
+  @Override
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    if (loginAttemptService.isBlocked()) {
+      throw new AuthenticationException(
+          "Your ip is blocked due to too many failed login attempts. Try again later.");
+    }
+
+    return userDao
+        .findByUsername(username)
+        .map(
+            user ->
+                new User(
+                    user.getUsername(),
+                    user.getPassword(),
+                    List.of(new SimpleGrantedAuthority("ROLE_USER"))))
+        .orElseThrow(() -> new UsernameNotFoundException("Failed to retrieve user: " + username));
   }
 }
