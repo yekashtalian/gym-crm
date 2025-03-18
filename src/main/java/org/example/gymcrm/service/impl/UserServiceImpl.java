@@ -2,30 +2,30 @@ package org.example.gymcrm.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.gymcrm.dao.UserDao;
-import org.example.gymcrm.exception.AuthenticationException;
+import org.example.gymcrm.dto.AuthenticationResponse;
 import org.example.gymcrm.exception.BruteForceException;
 import org.example.gymcrm.exception.NotFoundException;
+import org.example.gymcrm.exception.UnauthorizedException;
 import org.example.gymcrm.exception.UserServiceException;
+import org.example.gymcrm.security.service.JwtService;
+import org.example.gymcrm.service.AuthService;
 import org.example.gymcrm.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class UserServiceImpl implements UserService {
   private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
   private final UserDao userDao;
+  private final AuthService authService;
+  private final JwtService jwtService;
   private final LoginAttemptService loginAttemptService;
+  private final PasswordEncoder passwordEncoder;
 
   @Transactional
   @Override
@@ -40,33 +40,36 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                   return new NotFoundException("This user doesn't exist");
                 });
 
-    if (!existingUser.getPassword().equals(oldPassword)) {
+    if (!passwordEncoder.matches(oldPassword, existingUser.getPassword())) {
       logger.warn("Invalid old password provided for user: {}", username);
       throw new UserServiceException("Invalid old password");
     }
-    if (oldPassword.equals(newPassword)) {
+
+    if (passwordEncoder.matches(newPassword, existingUser.getPassword())) {
       logger.warn("User {} attempted to set a new password identical to the old one", username);
       throw new UserServiceException("New password must be different from the old one");
     }
-    existingUser.setPassword(newPassword);
+    existingUser.setPassword(passwordEncoder.encode(newPassword));
     logger.info("Password changed successfully for user: {}", username);
   }
 
+  @Transactional
   @Override
-  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    if (loginAttemptService.isBlocked()) {
-      throw new AuthenticationException(
-          "Your ip is blocked due to too many failed login attempts. Try again later.");
+  public AuthenticationResponse login(String username, String password) {
+    logger.info("Trying to login user {} in system....", username);
+    var isAuthenticated = authService.authenticate(username, password);
+    if (loginAttemptService.isBlocked()){
+      throw new BruteForceException("Your ip is blocked due to so many failed login attempts. Try again later.");
+    }
+    if (!isAuthenticated) {
+      throw new UnauthorizedException("Invalid authentication");
     }
 
-    return userDao
-        .findByUsername(username)
-        .map(
-            user ->
-                new User(
-                    user.getUsername(),
-                    user.getPassword(),
-                    List.of(new SimpleGrantedAuthority("ROLE_USER"))))
-        .orElseThrow(() -> new UsernameNotFoundException("Failed to retrieve user: " + username));
+    var user =
+        userDao.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
+    var jwt = jwtService.generateToken(user);
+    logger.info("User successfully logged in");
+
+    return AuthenticationResponse.builder().token(jwt).build();
   }
 }

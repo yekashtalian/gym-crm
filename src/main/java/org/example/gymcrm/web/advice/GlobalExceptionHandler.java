@@ -1,6 +1,7 @@
 package org.example.gymcrm.web.advice;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import io.jsonwebtoken.JwtException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
@@ -12,8 +13,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import static java.time.LocalDateTime.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -24,7 +28,7 @@ public class GlobalExceptionHandler {
 
     var errorResponse =
         new ErrorResponse(
-            LocalDateTime.now(),
+            now(),
             String.format(
                 "Failed to create a new %s, the request contains invalid fields",
                 ex.getObjectName()),
@@ -38,7 +42,7 @@ public class GlobalExceptionHandler {
       ConstraintViolationException ex) {
     var errorResponse =
         ErrorResponse.builder()
-            .localDateTime(LocalDateTime.now())
+            .localDateTime(now())
             .errorMessage(
                 ex.getConstraintViolations().stream()
                     .map(ConstraintViolation::getMessage)
@@ -51,10 +55,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(value = UnauthorizedException.class)
   public ResponseEntity<ErrorResponse> handleUnauthorized(RuntimeException ex) {
     var errorResponse =
-        ErrorResponse.builder()
-            .localDateTime(LocalDateTime.now())
-            .errorMessage(ex.getMessage())
-            .build();
+        ErrorResponse.builder().localDateTime(now()).errorMessage(ex.getMessage()).build();
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
   }
 
@@ -68,10 +69,7 @@ public class GlobalExceptionHandler {
       })
   public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException ex) {
     var errorResponse =
-        ErrorResponse.builder()
-            .localDateTime(LocalDateTime.now())
-            .errorMessage(ex.getMessage())
-            .build();
+        ErrorResponse.builder().localDateTime(now()).errorMessage(ex.getMessage()).build();
     return ResponseEntity.badRequest().body(errorResponse);
   }
 
@@ -90,11 +88,30 @@ public class GlobalExceptionHandler {
       }
     }
     var errorResponse =
-        ErrorResponse.builder()
-            .localDateTime(LocalDateTime.now())
-            .errorMessage(errorMessage)
-            .build();
+        ErrorResponse.builder().localDateTime(now()).errorMessage(errorMessage).build();
 
     return ResponseEntity.badRequest().body(errorResponse);
+  }
+
+  @ExceptionHandler(JwtException.class)
+  public ResponseEntity<ErrorResponse> handleJwtException(JwtException e) {
+    var errorResponse =
+        ErrorResponse.builder().localDateTime(now()).errorMessage(e.getMessage()).build();
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+  }
+
+  @ExceptionHandler(MissingRequestHeaderException.class)
+  public ResponseEntity<ErrorResponse> handleMissingAuthHeaderException(
+      MissingRequestHeaderException ex) {
+    var errorResponse =
+        ErrorResponse.builder().localDateTime(now()).errorMessage(ex.getMessage()).build();
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+  }
+
+  @ExceptionHandler(BruteForceException.class)
+  public ResponseEntity<ErrorResponse> handleBruteForceException(BruteForceException ex) {
+    var errorResponse =
+        ErrorResponse.builder().localDateTime(now()).errorMessage(ex.getMessage()).build();
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
   }
 }

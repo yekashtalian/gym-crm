@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class TrainerController {
   private final TrainerService trainerService;
   private final TrainingService trainingService;
-  
+
   @GetMapping("/trainer/{username}")
   public ResponseEntity<TrainerProfileDto> getTrainer(@PathVariable("username") String username) {
     var trainerProfile = trainerService.findByUsername(username);
@@ -32,7 +32,7 @@ public class TrainerController {
     var registeredTrainer = trainerService.save(trainer);
     return ResponseEntity.ok(registeredTrainer);
   }
-  
+
   @PutMapping("/trainer/{username}")
   public ResponseEntity<TrainerProfileDto> updateTrainer(
       @PathVariable("username") String username,
@@ -40,14 +40,14 @@ public class TrainerController {
     var trainerProfile = trainerService.update(username, trainer);
     return ResponseEntity.ok(trainerProfile);
   }
-  
+
   @GetMapping("/trainers/unassigned")
   public ResponseEntity<List<TrainerProfileDto>> getUnassignedTrainers(
       @RequestParam("username") String username) {
     var unassignedTrainersProfiles = trainerService.getUnassignedTrainers(username);
     return ResponseEntity.ok(unassignedTrainersProfiles);
   }
-  
+
   @GetMapping("/trainer/{username}/trainings")
   public ResponseEntity<List<TrainerTrainingDto>> getTrainerTrainings(
       @PathVariable("username") String username,
@@ -59,7 +59,7 @@ public class TrainerController {
         trainingService.getTrainingsByTrainerUsername(username, from, to, traineeName);
     return ResponseEntity.ok(trainerTrainings);
   }
-  
+
   @PatchMapping("/trainer/{username}/status")
   public ResponseEntity<Void> changeStatus(@PathVariable("username") String username) {
     trainerService.changeStatus(username);

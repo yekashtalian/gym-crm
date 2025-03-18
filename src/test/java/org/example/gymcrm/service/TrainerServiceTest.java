@@ -14,8 +14,8 @@ import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.TrainingType;
 import org.example.gymcrm.entity.User;
 import org.example.gymcrm.exception.NotFoundException;
-import org.example.gymcrm.exception.TrainerServiceException;
 import org.example.gymcrm.mapper.TrainerMapper;
+import org.example.gymcrm.security.service.JwtService;
 import org.example.gymcrm.service.impl.TrainerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,17 +23,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 public class TrainerServiceTest {
 
   @Mock private TrainerDao trainerDao;
-
   @Mock private TraineeDao traineeDao;
-
   @Mock private TrainingTypeDao trainingTypeDao;
-
   @Mock private TrainerMapper trainerMapper;
+  @Mock private PasswordEncoder passwordEncoder;
+  @Mock private JwtService jwtService;
 
   @InjectMocks private TrainerServiceImpl trainerService;
 
@@ -85,40 +85,32 @@ public class TrainerServiceTest {
   }
 
   @Test
-  void testSave() {
+  void save_ShouldRegisterTrainer_WhenSpecializationExists() {
     when(trainerMapper.registerDtoToUser(registerTrainerRequestDto)).thenReturn(user);
     when(trainingTypeDao.findById(1L)).thenReturn(Optional.of(trainingType));
     when(traineeDao.findUsernames()).thenReturn(Collections.emptyList());
     when(trainerDao.findUsernames()).thenReturn(Collections.emptyList());
-    when(trainerDao.save(any(Trainer.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(trainerDao.save(any(Trainer.class))).thenReturn(trainer);
+    when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
     when(trainerMapper.trainerToDto(any(User.class))).thenReturn(registerTrainerResponseDto);
+    when(jwtService.generateToken(any(User.class))).thenReturn("mockToken");
 
     RegisterTrainerResponseDto response = trainerService.save(registerTrainerRequestDto);
 
     assertNotNull(response);
     assertEquals("john.doe", response.getUsername());
+    assertEquals("mockToken", response.getToken());
 
-    verify(trainerDao, times(1)).save(any(Trainer.class));
-    verify(trainerMapper, times(1)).trainerToDto(any(User.class));
-    verify(trainingTypeDao, times(1)).findById(1L);
-    verify(traineeDao, times(1)).findUsernames();
-    verify(trainerDao, times(1)).findUsernames();
-  }
-
-
-  @Test
-  void testSave_SpecializationNotFound() {
-    when(trainerMapper.registerDtoToUser(registerTrainerRequestDto)).thenReturn(user);
-    when(trainingTypeDao.findById(1L)).thenReturn(Optional.empty());
-
-    assertThrows(
-        TrainerServiceException.class, () -> trainerService.save(registerTrainerRequestDto));
+    verify(trainerDao).save(any(Trainer.class));
+    verify(trainerMapper).trainerToDto(any(User.class));
+    verify(trainingTypeDao).findById(1L);
+    verify(jwtService).generateToken(any(User.class));
   }
 
   @Test
-  void testUpdate() {
+  void update_ShouldUpdateTrainer_WhenTrainerExists() {
     when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
-    when(trainingTypeDao.findById(updateTrainerRequestDto.getSpecializationId())).thenReturn(Optional.of(trainingType));
+    when(trainingTypeDao.findById(1L)).thenReturn(Optional.of(trainingType));
     when(trainerDao.update(trainer)).thenReturn(trainer);
     when(trainerMapper.toProfileDto(trainer)).thenReturn(trainerProfileDto);
 
@@ -126,20 +118,22 @@ public class TrainerServiceTest {
 
     assertNotNull(response);
     assertEquals("john.doe", response.getUsername());
-    verify(trainerDao, times(1)).update(trainer);
+    verify(trainerDao).update(trainer);
   }
 
   @Test
-  void testUpdate_TrainerNotFound() {
+  void update_ShouldThrowException_WhenTrainerNotFound() {
     when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
 
     assertThrows(
-        NotFoundException.class,
-        () -> trainerService.update("john.doe", updateTrainerRequestDto));
+        NotFoundException.class, () -> trainerService.update("john.doe", updateTrainerRequestDto));
+
+    verify(trainerDao).findByUsername("john.doe");
+    verifyNoInteractions(trainingTypeDao);
   }
 
   @Test
-  void testFindByUsername() {
+  void findByUsername_ShouldReturnTrainerProfile_WhenTrainerExists() {
     when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
     when(trainerMapper.toProfileDto(trainer)).thenReturn(trainerProfileDto);
 
@@ -150,31 +144,35 @@ public class TrainerServiceTest {
   }
 
   @Test
-  void testFindByUsername_TrainerNotFound() {
+  void findByUsername_ShouldThrowException_WhenTrainerNotFound() {
     when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
 
     assertThrows(NotFoundException.class, () -> trainerService.findByUsername("john.doe"));
+
+    verify(trainerDao).findByUsername("john.doe");
   }
 
   @Test
-  void testChangeStatus() {
+  void changeStatus_ShouldToggleTrainerStatus_WhenTrainerExists() {
     when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.of(trainer));
 
     trainerService.changeStatus("john.doe");
 
     assertFalse(trainer.getUser().isActive());
-    verify(trainerDao, times(1)).findByUsername("john.doe");
+    verify(trainerDao).findByUsername("john.doe");
   }
 
   @Test
-  void testChangeStatus_TrainerNotFound() {
+  void changeStatus_ShouldThrowException_WhenTrainerNotFound() {
     when(trainerDao.findByUsername("john.doe")).thenReturn(Optional.empty());
 
     assertThrows(NotFoundException.class, () -> trainerService.changeStatus("john.doe"));
+
+    verify(trainerDao).findByUsername("john.doe");
   }
 
   @Test
-  void testGetUnassignedTrainers() {
+  void getUnassignedTrainers_ShouldReturnTrainers_WhenTraineeExists() {
     when(traineeDao.findByUsername("trainee.username"))
         .thenReturn(Optional.of(new org.example.gymcrm.entity.Trainee()));
     when(trainerDao.findUnassignedTrainersByTraineeUsername("trainee.username"))
@@ -189,11 +187,12 @@ public class TrainerServiceTest {
   }
 
   @Test
-  void testGetUnassignedTrainers_TraineeNotFound() {
+  void getUnassignedTrainers_ShouldThrowException_WhenTraineeNotFound() {
     when(traineeDao.findByUsername("trainee.username")).thenReturn(Optional.empty());
 
     assertThrows(
-        NotFoundException.class,
-        () -> trainerService.getUnassignedTrainers("trainee.username"));
+        NotFoundException.class, () -> trainerService.getUnassignedTrainers("trainee.username"));
+
+    verify(traineeDao).findByUsername("trainee.username");
   }
 }

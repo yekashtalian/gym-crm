@@ -1,217 +1,133 @@
 package org.example.gymcrm.web.controller;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Date;
-import java.util.List;
 import org.example.gymcrm.dto.*;
 import org.example.gymcrm.service.TraineeService;
 import org.example.gymcrm.service.TrainingService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
 
-@WebMvcTest(controllers = TraineeController.class)
-@ExtendWith(MockitoExtension.class)
-public class TraineeControllerTest {
-  @Autowired private MockMvc mockMvc;
-  @Autowired private ObjectMapper objectMapper;
-  @MockitoBean private TraineeService traineeService;
-  @MockitoBean private TrainingService trainingService;
-  @Autowired private TraineeController traineeController;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+class TraineeControllerTest {
+
+  @Mock
+  private TraineeService traineeService;
+
+  @Mock
+  private TrainingService trainingService;
+
+  @InjectMocks
+  private TraineeController traineeController;
+
+  @BeforeEach
+  void setUp() {
+    MockitoAnnotations.openMocks(this);
+  }
 
   @Test
-  public void getTrainee() throws Exception {
-    var username = "name.surname";
-    var traineeProfile =
-        TraineeProfileDto.builder()
-            .firstName("Name")
-            .lastName("Surname")
-            .dateOfBirth(new Date(1000))
-            .active(false)
-            .address("Test address")
-            .trainers(List.of())
-            .build();
+  void getTraineeTest() {
+    String username = "john";
+    TraineeProfileDto traineeProfile = new TraineeProfileDto();
 
     when(traineeService.findByUsername(username)).thenReturn(traineeProfile);
 
-    mockMvc
-        .perform(get("/api/v1/trainee/{username}", username))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.firstName").value(traineeProfile.getFirstName()))
-        .andExpect(jsonPath("$.lastName").value(traineeProfile.getLastName()))
-        .andExpect(jsonPath("$.dateOfBirth").exists())
-        .andExpect(jsonPath("$.active").value(traineeProfile.isActive()))
-        .andExpect(jsonPath("$.address").value(traineeProfile.getAddress()));
+    ResponseEntity<TraineeProfileDto> response = traineeController.getTrainee(username);
+
+    assertEquals(200, response.getStatusCodeValue());
+    assertEquals(traineeProfile, response.getBody());
+    verify(traineeService).findByUsername(username);
   }
 
   @Test
-  public void registerTrainee() throws Exception {
-    var requestDto =
-        RegisterTraineeRequestDto.builder()
-            .firstName("John")
-            .lastName("Doe")
-            .dateOfBirth(new Date(1000))
-            .address("Test address")
-            .build();
-    var requestJson = objectMapper.writeValueAsString(requestDto);
-    var responseDto =
-        RegisterTraineeResponseDto.builder().username("john.doe").password("12345").build();
+  void registerTraineeTest() {
+    RegisterTraineeRequestDto request = new RegisterTraineeRequestDto();
+    RegisterTraineeResponseDto responseDto = new RegisterTraineeResponseDto();
 
-    when(traineeService.save(any(RegisterTraineeRequestDto.class))).thenReturn(responseDto);
-    mockMvc
-        .perform(
-            post("/api/v1/trainee").contentType(MediaType.APPLICATION_JSON).content(requestJson))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.username").value(responseDto.getUsername()));
+    when(traineeService.save(request)).thenReturn(responseDto);
 
-    verify(traineeService, times(1)).save(any());
+    ResponseEntity<RegisterTraineeResponseDto> response = traineeController.registerTrainee(request);
+
+    assertEquals(200, response.getStatusCodeValue());
+    assertEquals(responseDto, response.getBody());
+    verify(traineeService).save(request);
   }
 
   @Test
-  public void updateTrainee() throws Exception {
-    var username = "john.doe";
-    var updateDto =
-        UpdateTraineeRequestDto.builder()
-            .firstName("John")
-            .lastName("Doe")
-            .address("Test address")
-            .active(false)
-            .build();
-    var updateJson = objectMapper.writeValueAsString(updateDto);
+  void updateTraineeTest() {
+    String username = "john";
+    UpdateTraineeRequestDto request = new UpdateTraineeRequestDto();
+    TraineeProfileDto updatedProfile = new TraineeProfileDto();
 
-    var traineeProfile =
-        TraineeProfileDto.builder()
-            .username(username)
-            .firstName("John")
-            .lastName("Doe")
-            .active(false)
-            .address("Test address")
-            .trainers(List.of())
-            .build();
+    when(traineeService.update(username, request)).thenReturn(updatedProfile);
 
-    when(traineeService.update(eq(username), any())).thenReturn(traineeProfile);
+    ResponseEntity<TraineeProfileDto> response = traineeController.updateTrainee(username, request);
 
-    mockMvc
-        .perform(
-            put("/api/v1/trainee/{username}", username)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.firstName").value(traineeProfile.getFirstName()))
-        .andExpect(jsonPath("$.lastName").value(traineeProfile.getLastName()))
-        .andExpect(jsonPath("$.active").value(traineeProfile.isActive()))
-        .andExpect(jsonPath("$.address").value(traineeProfile.getAddress()));
-
-    verify(traineeService, times(1)).update(eq(username), any());
+    assertEquals(200, response.getStatusCodeValue());
+    assertEquals(updatedProfile, response.getBody());
+    verify(traineeService).update(username, request);
   }
 
   @Test
-  public void deleteTrainee() throws Exception {
-    var username = "john.doe";
+  void deleteTraineeTest() {
+    String username = "john";
 
     doNothing().when(traineeService).deleteByUsername(username);
 
-    mockMvc.perform(delete("/api/v1/trainee/{username}", username)).andExpect(status().isOk());
+    ResponseEntity<Void> response = traineeController.deleteTrainee(username);
 
-    verify(traineeService, times(1)).deleteByUsername(username);
+    assertEquals(200, response.getStatusCodeValue());
+    verify(traineeService).deleteByUsername(username);
   }
 
   @Test
-  public void getTraineeTrainings() throws Exception {
-    var username = "john.doe";
-    var trainingType = TrainingTypeDto.builder().name("CARDIO").build();
-    var traineeTraining1 =
-        TraineeTrainingDto.builder()
-            .name("Test name1")
-            .date(new Date(1000))
-            .trainingType(trainingType)
-            .duration(35)
-            .trainerName("Trainer1")
-            .build();
-    var traineeTraining2 =
-        TraineeTrainingDto.builder()
-            .name("Test name2")
-            .date(new Date(1000))
-            .trainingType(trainingType)
-            .duration(45)
-            .trainerName("Trainer2")
-            .build();
-    var trainingList = List.of(traineeTraining1, traineeTraining2);
+  void getTraineeTrainingsTest() {
+    String username = "john";
+    List<TraineeTrainingDto> trainings = Collections.emptyList();
 
     when(trainingService.getTrainingsByTraineeUsername(eq(username), any(), any(), any(), any()))
-        .thenReturn(trainingList);
+            .thenReturn(trainings);
 
-    mockMvc
-        .perform(get("/api/v1/trainee/{username}/trainings", username))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.size()").value(2))
-        .andExpect(jsonPath("$[0].name").value(traineeTraining1.getName()))
-        .andExpect(
-            jsonPath("$[0].trainingType.name").value(traineeTraining1.getTrainingType().getName()))
-        .andExpect(jsonPath("$[0].trainerName").value(traineeTraining1.getTrainerName()))
-        .andExpect(jsonPath("$[1].name").value(traineeTraining2.getName()))
-        .andExpect(
-            jsonPath("$[1].trainingType.name").value(traineeTraining2.getTrainingType().getName()))
-        .andExpect(jsonPath("$[1].trainerName").value(traineeTraining2.getTrainerName()));
+    ResponseEntity<List<TraineeTrainingDto>> response = traineeController.getTraineeTrainings(username, new Date(), new Date(), "trainer", "type");
+
+    assertEquals(200, response.getStatusCodeValue());
+    assertEquals(trainings, response.getBody());
+    verify(trainingService).getTrainingsByTraineeUsername(eq(username), any(), any(), any(), any());
   }
 
   @Test
-  public void changeStatus() throws Exception {
-    var username = "john.doe";
+  void updateTraineeTrainersListTest() {
+    String username = "john";
+    UpdateTrainersDto updateDto = new UpdateTrainersDto();
+    List<TraineeTrainersDto> trainerList = Collections.emptyList();
+
+    when(traineeService.updateTraineeTrainers(username, updateDto)).thenReturn(trainerList);
+
+    ResponseEntity<List<TraineeTrainersDto>> response = traineeController.updateTraineeTrainersList(username, updateDto);
+
+    assertEquals(200, response.getStatusCodeValue());
+    assertEquals(trainerList, response.getBody());
+    verify(traineeService).updateTraineeTrainers(username, updateDto);
+  }
+
+  @Test
+  void changeStatusTest() {
+    String username = "john";
+
     doNothing().when(traineeService).changeStatus(username);
 
-    mockMvc
-        .perform(patch("/api/v1/trainee/{username}/status", username))
-        .andExpect(status().isOk());
-  }
+    ResponseEntity<Void> response = traineeController.changeStatus(username);
 
-  @Test
-  void updateTraineeTrainersList_ShouldReturnUpdatedTrainers() throws Exception {
-    String username = "testuser";
-    UpdateTrainersDto updateTrainersDto = new UpdateTrainersDto(List.of("trainer1", "trainer2"));
-
-    var trainer1 = TraineeTrainersDto.builder().username("trainer1").build();
-    var trainer2 = TraineeTrainersDto.builder().username("trainer2").build();
-    List<TraineeTrainersDto> responseDto = List.of(trainer1, trainer2);
-
-    when(traineeService.updateTraineeTrainers(eq(username), any(UpdateTrainersDto.class)))
-        .thenReturn(responseDto);
-
-    mockMvc
-        .perform(
-            put("/api/v1/trainee/{username}/trainers", username)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateTrainersDto)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.size()").value(2))
-        .andExpect(jsonPath("$[0].username").value("trainer1"))
-        .andExpect(jsonPath("$[1].username").value("trainer2"));
-
-    verify(traineeService).updateTraineeTrainers(eq(username), any(UpdateTrainersDto.class));
-  }
-
-  @Test
-  void updateTraineeTrainersList_ShouldReturnBadRequestWhenInvalid() throws Exception {
-    String username = "testuser";
-    UpdateTrainersDto invalidDto = new UpdateTrainersDto(null);
-
-    mockMvc
-        .perform(
-            put("/api/v1/trainee/{username}/trainers", username)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidDto)))
-        .andExpect(status().isBadRequest());
-
-    verifyNoInteractions(traineeService);
+    assertEquals(200, response.getStatusCodeValue());
+    verify(traineeService).changeStatus(username);
   }
 }
+

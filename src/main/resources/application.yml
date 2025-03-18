@@ -10,7 +10,10 @@ spring:
   # JSON Non-Null
   jackson:
     default-property-inclusion: non_null
-# Server configuration
+  # Web
+  web:
+    resources:
+      static-locations: classpath:/static/
 server:
   port: 8082
 
@@ -19,8 +22,6 @@ springdoc:
   swagger-ui:
     url: openapi.yml
     path: /
-  api-docs:
-    path: /api-docs
 
 info:
   app:
@@ -52,3 +53,6 @@ management:
     health:
       show-details: always
 health.disc.space: /
+jwt:
+  secret: 984hg493gh0439rthr0429uruj2309yh937gc763fe87t3f89723gf
+  lifetime: 3m

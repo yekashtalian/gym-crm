@@ -46,7 +46,7 @@ public class LoginAttemptService {
     return true;
   }
 
-  private String getClientIP() {
+  String getClientIP() {
     String xfHeader = request.getHeader("X-Forwarded-For");
     if (xfHeader == null || xfHeader.isEmpty() || !xfHeader.contains(request.getRemoteAddr())) {
       return request.getRemoteAddr();
