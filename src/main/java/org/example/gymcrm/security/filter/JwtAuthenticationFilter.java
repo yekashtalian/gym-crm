@@ -25,51 +25,53 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-  private final JwtService jwtService;
-  private final UserDetailsService userDetailsService;
-  private final JwtBlacklistService blacklistService;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
+    private final JwtBlacklistService blacklistService;
 
-  @Autowired
-  @Qualifier("handlerExceptionResolver")
-  private HandlerExceptionResolver resolver;
+    @Autowired
+    @Qualifier("handlerExceptionResolver")
+    private HandlerExceptionResolver resolver;
 
-  @Override
-  protected void doFilterInternal(
-      @NonNull HttpServletRequest request,
-      @NonNull HttpServletResponse response,
-      @NonNull FilterChain filterChain)
-      throws ServletException, IOException {
-    final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-    final String jwt;
-    final String username;
-    try {
-      if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        filterChain.doFilter(request, response);
-        return;
-      }
-      jwt = authHeader.substring(7);
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        final String jwt;
+        final String username;
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            jwt = authHeader.substring(7);
 
-      if (blacklistService.isTokenBlacklisted(jwt)) {
-        throw new JwtException("Token is blacklisted");
-      }
+            if (blacklistService.isTokenBlacklisted(jwt)) {
+                throw new JwtException("Token is blacklisted");
+            }
 
-      username = jwtService.extractUsername(jwt);
+            username = jwtService.extractUsername(jwt);
 
-      if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        if (jwtService.isTokenValid(jwt, userDetails)) {
-          UsernamePasswordAuthenticationToken authToken =
-              new UsernamePasswordAuthenticationToken(
-                  userDetails, null, userDetails.getAuthorities());
-          authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-          SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (username != null
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+        } catch (Exception e) {
+            resolver.resolveException(request, response, null, e);
+            logger.debug("Error occurred in security filter chain: {}" + e);
+            return;
         }
-      }
-    } catch (JwtException e) {
-      resolver.resolveException(request, response, null, e);
-      logger.debug("Error occurred in security filter chain: {}" + e);
-      return;
+        filterChain.doFilter(request, response);
     }
-    filterChain.doFilter(request, response);
-  }
 }

@@ -15,7 +15,6 @@ import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.User;
 import org.example.gymcrm.exception.NotFoundException;
-import org.example.gymcrm.exception.TraineeServiceException;
 import org.example.gymcrm.mapper.TraineeMapper;
 import org.example.gymcrm.security.service.JwtService;
 import org.example.gymcrm.service.TraineeService;

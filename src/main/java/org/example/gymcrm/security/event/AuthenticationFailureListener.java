@@ -1,26 +1,29 @@
 package org.example.gymcrm.security.event;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import lombok.RequiredArgsConstructor;
+
 import org.example.gymcrm.service.impl.LoginAttemptService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class AuthenticationFailureListener
-    implements ApplicationListener<AuthenticationFailureBadCredentialsEvent> {
-  @Autowired private HttpServletRequest request;
+        implements ApplicationListener<AuthenticationFailureBadCredentialsEvent> {
+    private final HttpServletRequest request;
 
-  @Autowired private LoginAttemptService loginAttemptService;
+    private final LoginAttemptService loginAttemptService;
 
-  @Override
-  public void onApplicationEvent(AuthenticationFailureBadCredentialsEvent e) {
-    final String xfHeader = request.getHeader("X-Forwarded-For");
-    if (xfHeader == null || xfHeader.isEmpty() || !xfHeader.contains(request.getRemoteAddr())) {
-      loginAttemptService.loginFailed(request.getRemoteAddr());
-    } else {
-      loginAttemptService.loginFailed(xfHeader.split(",")[0]);
+    @Override
+    public void onApplicationEvent(AuthenticationFailureBadCredentialsEvent event) {
+        final String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader == null || xfHeader.isEmpty() || !xfHeader.contains(request.getRemoteAddr())) {
+            loginAttemptService.loginFailed(request.getRemoteAddr());
+        } else {
+            loginAttemptService.loginFailed(xfHeader.split(",")[0]);
+        }
     }
-  }
 }
