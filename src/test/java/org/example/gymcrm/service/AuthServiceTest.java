@@ -2,29 +2,22 @@ package org.example.gymcrm.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
-import org.example.gymcrm.security.event.CustomAuthenticationEventPublisher;
 import org.example.gymcrm.service.impl.AuthServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 
+@ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
     @Mock private AuthenticationManager authenticationManager;
 
-    @Mock private CustomAuthenticationEventPublisher eventPublisher;
-
-    private AuthServiceImpl authService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        authService = new AuthServiceImpl(authenticationManager, eventPublisher);
-    }
+    @InjectMocks private AuthServiceImpl authService;
 
     @Test
     void authenticate_ShouldReturnTrue_WhenAuthenticationIsSuccessful() {
@@ -44,32 +37,16 @@ class AuthServiceTest {
         // Assert
         verify(authenticationManager)
                 .authenticate(authenticationToken); // Ensure authenticate is called
-        verifyNoInteractions(eventPublisher); // Ensure the eventPublisher is not called
     }
-
     @Test
-    void authenticate_ShouldReturnFalse_WhenAuthenticationFails() {
-        // Arrange
-        String username = "testuser";
-        String password = "wrongpassword";
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(username, password);
+    void testAuthenticate_FailureThrowsException() {
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Invalid credentials"));
 
-        // Create a custom subclass of AuthenticationException to throw
-        AuthenticationException mockException =
-                new AuthenticationException("Authentication failed") {};
+        assertThrows(BadCredentialsException.class, () ->
+                authService.authenticate("testuser", "wrongpassword"));
 
-        // Mock failed authentication
-        when(authenticationManager.authenticate(authenticationToken)).thenThrow(mockException);
-
-        // Act
-        authService.authenticate(username, password);
-
-        // Assert
-        verify(authenticationManager)
-                .authenticate(authenticationToken); // Ensure authenticate is called
-        verify(eventPublisher)
-                .publishAuthenticationFailure(
-                        authenticationToken); // Ensure eventPublisher is called
+        verify(authenticationManager, times(1))
+                .authenticate(any(UsernamePasswordAuthenticationToken.class));
     }
 }

@@ -22,14 +22,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock
-    private UserDao userDao;
+    @Mock private UserDao userDao;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+    @Mock private PasswordEncoder passwordEncoder;
 
-    @InjectMocks
-    private UserServiceImpl userService;
+    @InjectMocks private UserServiceImpl userService;
 
     private User user;
 
@@ -58,7 +55,10 @@ class UserServiceTest {
     void changePassword_ShouldThrowNotFoundException_WhenUserNotFound() {
         when(userDao.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.changePassword("nonexistent", "oldpassword", "newpassword"))
+        assertThatThrownBy(
+                        () ->
+                                userService.changePassword(
+                                        "nonexistent", "oldpassword", "newpassword"))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("This user doesn't exist");
 
@@ -71,7 +71,10 @@ class UserServiceTest {
         when(userDao.findByUsername("testuser")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrongpassword", "encodedOldPassword")).thenReturn(false);
 
-        assertThatThrownBy(() -> userService.changePassword("testuser", "wrongpassword", "newpassword"))
+        assertThatThrownBy(
+                        () ->
+                                userService.changePassword(
+                                        "testuser", "wrongpassword", "newpassword"))
                 .isInstanceOf(UserServiceException.class)
                 .hasMessage("Invalid old password");
 
@@ -86,7 +89,8 @@ class UserServiceTest {
         when(passwordEncoder.matches("oldpassword", "encodedOldPassword")).thenReturn(true);
         when(passwordEncoder.matches("oldpassword", "encodedOldPassword")).thenReturn(true);
 
-        assertThatThrownBy(() -> userService.changePassword("testuser", "oldpassword", "oldpassword"))
+        assertThatThrownBy(
+                        () -> userService.changePassword("testuser", "oldpassword", "oldpassword"))
                 .isInstanceOf(UserServiceException.class)
                 .hasMessage("New password must be different from the old one");
 
