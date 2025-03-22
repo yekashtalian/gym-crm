@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gymcrm_stg
+    username: stg_user
+    password: stguser
