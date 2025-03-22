@@ -15,11 +15,12 @@ import org.example.gymcrm.entity.Trainee;
 import org.example.gymcrm.entity.Trainer;
 import org.example.gymcrm.entity.User;
 import org.example.gymcrm.exception.NotFoundException;
-import org.example.gymcrm.exception.TraineeServiceException;
 import org.example.gymcrm.mapper.TraineeMapper;
+import org.example.gymcrm.security.service.JwtService;
 import org.example.gymcrm.service.TraineeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +32,9 @@ public class TraineeServiceImpl implements TraineeService {
   private static final String TRAINER_NOT_FOUND = "This trainer doesn't exist!";
   private final TraineeDao traineeDao;
   private final TrainerDao trainerDao;
+  private final JwtService jwtService;
   private final TraineeMapper traineeMapper;
+  private final PasswordEncoder passwordEncoder;
 
   @Transactional
   @Override
@@ -41,22 +44,31 @@ public class TraineeServiceImpl implements TraineeService {
     var trainee = traineeMapper.registerDtoToTrainee(traineeRequestDto);
 
     trainee.setUser(user);
-    assignGeneratedCredentials(trainee);
+
+    var rawPassword = generateRandomPassword();
+    assignGeneratedCredentials(trainee, rawPassword);
 
     var savedTrainee = traineeDao.save(trainee);
     var responseDto = traineeMapper.traineeToDto(savedTrainee.getUser());
+    responseDto.setPassword(rawPassword);
+
+    var jwt = jwtService.generateToken(savedTrainee.getUser());
 
     logger.info("Successfully registered trainee with username: {}", responseDto.getUsername());
 
-    return responseDto;
+    return RegisterTraineeResponseDto.builder()
+        .username(savedTrainee.getUser().getUsername())
+        .password(rawPassword)
+        .token(jwt)
+        .build();
   }
 
-  private void assignGeneratedCredentials(Trainee trainee) {
+  private void assignGeneratedCredentials(Trainee trainee, String passwordToEncode) {
     var usernames = mergeAllUsernames(traineeDao.findUsernames(), trainerDao.findUsernames());
     var user = trainee.getUser();
 
     user.setUsername(generateUsername(user.getFirstName(), user.getLastName(), usernames));
-    user.setPassword(generateRandomPassword());
+    user.setPassword(passwordEncoder.encode(passwordToEncode));
 
     logger.info("Successfully assigned credentials for new trainee");
   }
@@ -183,8 +195,8 @@ public class TraineeServiceImpl implements TraineeService {
         .findByUsername(trainerUsername)
         .orElseThrow(
             () -> {
-              logger.error(TRAINER_NOT_FOUND, trainerUsername);
-              return new NotFoundException("This trainer doesn't exist");
+              logger.error("{} trainer doesn't exist", trainerUsername);
+              return new NotFoundException(TRAINER_NOT_FOUND);
             });
   }
 
@@ -194,8 +206,8 @@ public class TraineeServiceImpl implements TraineeService {
         .findByUsername(traineeUsername)
         .orElseThrow(
             () -> {
-              logger.error(TRAINEE_NOT_FOUND, traineeUsername);
-              return new NotFoundException("This trainee doesn't exist");
+              logger.error("{} trainee doesn't exist", traineeUsername);
+              return new NotFoundException(TRAINEE_NOT_FOUND);
             });
   }
 }

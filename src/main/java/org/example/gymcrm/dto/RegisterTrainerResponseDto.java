@@ -11,6 +11,7 @@ import lombok.*;
 public class RegisterTrainerResponseDto {
   private String username;
   private String password;
+  private String token;
 
   public RegisterTrainerResponseDto(String username) {
     this.username = username;

@@ -8,8 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RegisterTraineeResponseDto {
-  private String username;
-  private String password;
+public class AuthenticationResponse {
   private String token;
 }

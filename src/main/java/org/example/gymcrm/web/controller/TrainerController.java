@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import java.util.Date;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.example.gymcrm.aspect.RequiresAuthentication;
 import org.example.gymcrm.dto.*;
 import org.example.gymcrm.service.TrainerService;
 import org.example.gymcrm.service.TrainingService;
@@ -21,7 +20,6 @@ public class TrainerController {
   private final TrainerService trainerService;
   private final TrainingService trainingService;
 
-  @RequiresAuthentication
   @GetMapping("/trainer/{username}")
   public ResponseEntity<TrainerProfileDto> getTrainer(@PathVariable("username") String username) {
     var trainerProfile = trainerService.findByUsername(username);
@@ -35,7 +33,6 @@ public class TrainerController {
     return ResponseEntity.ok(registeredTrainer);
   }
 
-  @RequiresAuthentication
   @PutMapping("/trainer/{username}")
   public ResponseEntity<TrainerProfileDto> updateTrainer(
       @PathVariable("username") String username,
@@ -44,7 +41,6 @@ public class TrainerController {
     return ResponseEntity.ok(trainerProfile);
   }
 
-  @RequiresAuthentication
   @GetMapping("/trainers/unassigned")
   public ResponseEntity<List<TrainerProfileDto>> getUnassignedTrainers(
       @RequestParam("username") String username) {
@@ -52,7 +48,6 @@ public class TrainerController {
     return ResponseEntity.ok(unassignedTrainersProfiles);
   }
 
-  @RequiresAuthentication
   @GetMapping("/trainer/{username}/trainings")
   public ResponseEntity<List<TrainerTrainingDto>> getTrainerTrainings(
       @PathVariable("username") String username,
@@ -65,7 +60,6 @@ public class TrainerController {
     return ResponseEntity.ok(trainerTrainings);
   }
 
-  @RequiresAuthentication
   @PatchMapping("/trainer/{username}/status")
   public ResponseEntity<Void> changeStatus(@PathVariable("username") String username) {
     trainerService.changeStatus(username);

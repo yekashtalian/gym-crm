@@ -17,11 +17,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
     @Mock private UserDao userDao;
+
+    @Mock private PasswordEncoder passwordEncoder;
 
     @InjectMocks private UserServiceImpl userService;
 
@@ -31,70 +34,68 @@ class UserServiceTest {
     void setUp() {
         user = new User();
         user.setUsername("testuser");
-        user.setPassword("oldpassword");
-    }
-
-    @Test
-    void validateCredentials_ShouldReturnTrue_WhenCredentialsAreCorrect() {
-        when(userDao.findByUsername("testuser")).thenReturn(Optional.of(user));
-
-        boolean result = userService.validateCredentials("testuser", "oldpassword");
-
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    void validateCredentials_ShouldReturnFalse_WhenPasswordIsIncorrect() {
-        when(userDao.findByUsername("testuser")).thenReturn(Optional.of(user));
-
-        boolean result = userService.validateCredentials("testuser", "wrongpassword");
-
-        assertThat(result).isFalse();
-    }
-
-    @Test
-    void validateCredentials_ShouldReturnFalse_WhenUserNotFound() {
-        when(userDao.findByUsername("nonexistent")).thenReturn(Optional.empty());
-
-        boolean result = userService.validateCredentials("nonexistent", "password");
-
-        assertThat(result).isFalse();
+        user.setPassword("encodedOldPassword");
     }
 
     @Test
     void changePassword_ShouldUpdatePassword_WhenOldPasswordIsCorrect() {
         when(userDao.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("oldpassword", "encodedOldPassword")).thenReturn(true);
+        when(passwordEncoder.encode("newpassword")).thenReturn("encodedNewPassword");
 
         userService.changePassword("testuser", "oldpassword", "newpassword");
 
-        assertThat(user.getPassword()).isEqualTo("newpassword");
+        assertThat(user.getPassword()).isEqualTo("encodedNewPassword");
+        verify(userDao).findByUsername("testuser");
+        verify(passwordEncoder).matches("oldpassword", "encodedOldPassword");
+        verify(passwordEncoder).encode("newpassword");
     }
 
     @Test
-    void changePassword_ShouldThrowException_WhenUserNotFound() {
+    void changePassword_ShouldThrowNotFoundException_WhenUserNotFound() {
         when(userDao.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.changePassword("nonexistent", "oldpassword", "newpassword"))
+        assertThatThrownBy(
+                        () ->
+                                userService.changePassword(
+                                        "nonexistent", "oldpassword", "newpassword"))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("This user doesn't exist");
+
+        verify(userDao).findByUsername("nonexistent");
+        verifyNoMoreInteractions(passwordEncoder);
     }
 
     @Test
-    void changePassword_ShouldThrowException_WhenOldPasswordIsIncorrect() {
+    void changePassword_ShouldThrowUserServiceException_WhenOldPasswordIsIncorrect() {
         when(userDao.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongpassword", "encodedOldPassword")).thenReturn(false);
 
-        assertThatThrownBy(() -> userService.changePassword("testuser", "wrongpassword", "newpassword"))
+        assertThatThrownBy(
+                        () ->
+                                userService.changePassword(
+                                        "testuser", "wrongpassword", "newpassword"))
                 .isInstanceOf(UserServiceException.class)
                 .hasMessage("Invalid old password");
+
+        verify(userDao).findByUsername("testuser");
+        verify(passwordEncoder).matches("wrongpassword", "encodedOldPassword");
+        verifyNoMoreInteractions(passwordEncoder);
     }
 
     @Test
-    void changePassword_ShouldThrowException_WhenNewPasswordIsSameAsOldPassword() {
+    void changePassword_ShouldThrowUserServiceException_WhenNewPasswordIsSameAsOldPassword() {
         when(userDao.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("oldpassword", "encodedOldPassword")).thenReturn(true);
+        when(passwordEncoder.matches("oldpassword", "encodedOldPassword")).thenReturn(true);
 
-        assertThatThrownBy(() -> userService.changePassword("testuser", "oldpassword", "oldpassword"))
+        assertThatThrownBy(
+                        () -> userService.changePassword("testuser", "oldpassword", "oldpassword"))
                 .isInstanceOf(UserServiceException.class)
                 .hasMessage("New password must be different from the old one");
+
+        verify(userDao).findByUsername("testuser");
+        verify(passwordEncoder, times(2)).matches("oldpassword", "encodedOldPassword");
+        verifyNoMoreInteractions(passwordEncoder);
     }
 }
-

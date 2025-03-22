@@ -2,7 +2,6 @@ package org.example.gymcrm.web.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.gymcrm.aspect.RequiresAuthentication;
 import org.example.gymcrm.dto.TrainingDto;
 import org.example.gymcrm.service.TrainingService;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class TrainingController {
   private final TrainingService trainingService;
 
-  @RequiresAuthentication
   @PostMapping("/training")
   public ResponseEntity<Void> saveTraining(@RequestBody @Valid TrainingDto training) {
     trainingService.save(training);

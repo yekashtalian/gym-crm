@@ -2,10 +2,7 @@ package org.example.gymcrm.service;
 
 import java.util.List;
 
-import org.example.gymcrm.dto.RegisterTrainerRequestDto;
-import org.example.gymcrm.dto.RegisterTrainerResponseDto;
-import org.example.gymcrm.dto.TrainerProfileDto;
-import org.example.gymcrm.dto.UpdateTrainerRequestDto;
+import org.example.gymcrm.dto.*;
 import org.example.gymcrm.entity.Trainer;
 
 public interface TrainerService {
